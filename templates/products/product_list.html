@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/includes/products_app/products_card.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="catalog-container" style="max-width:1200px; margin:32px auto; padding:0 20px;">
+
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:28px;">
+        <h2 style="font-size:28px; font-weight:800; color:#1a1a2e; margin:0;">Бардык товарлар</h2>
+        {% if user.role == 'seller' %}
+            <a href="{% url 'products:create' %}" style="background:#2ecc71; color:#fff; padding:11px 22px; border-radius:10px; font-weight:600; font-size:14px; text-decoration:none; transition:background 0.2s;">
+                + Товар кошуу
+            </a>
+        {% endif %}
+    </div>
+
+    <div class="product-grid">
+        {% for product in products %}
+            {% include 'includes/products_app/products_card.html' with product=product %}
+        {% empty %}
+            <div style="text-align:center; padding:60px; background:#f7f8fc; border-radius:16px; color:#95a5a6; grid-column:1/-1;">
+                <p style="font-size:18px;">Товарлар азырынча кошула элек</p>
+            </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+{% endblock %}

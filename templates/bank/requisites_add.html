@@ -1,0 +1,155 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Добавить реквизиты — FINE{% endblock %}
+{% block header_title %}Добавить реквизиты{% endblock %}
+
+{% block extra_css %}
+<style>
+* { box-sizing: border-box; }
+.page { max-width: 600px; }
+
+.form-card {
+  background: #fff;
+  border: 1.5px solid #edf2f7;
+  border-radius: 16px;
+  padding: 24px;
+}
+
+.form-title { font-size: 18px; font-weight: 800; color: #1a1a2e; margin: 0 0 20px; }
+
+.form-group { margin-bottom: 16px; }
+.form-label { display: block; font-size: 12px; font-weight: 700; color: #636e72; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+
+.form-input, .form-select {
+  width: 100%; padding: 11px 14px;
+  border: 1.5px solid #e2e8f0; border-radius: 8px;
+  font-size: 14px; font-family: inherit; color: #1e293b;
+  outline: none; transition: border-color .2s;
+}
+
+.form-input:focus, .form-select:focus { border-color: #22c55e; }
+
+.form-hint { font-size: 11px; color: #94a3b8; margin-top: 4px; }
+
+.form-check {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 16px; cursor: pointer;
+}
+
+.form-check input { width: 16px; height: 16px; cursor: pointer; }
+.form-check span { font-size: 14px; color: #1a1a2e; font-weight: 500; }
+
+.btn-submit {
+  width: 100%; background: #22c55e; color: #fff;
+  border: none; padding: 13px;
+  border-radius: 10px; font-size: 15px; font-weight: 700;
+  cursor: pointer; margin-top: 20px; transition: background .2s;
+}
+
+.btn-submit:hover { background: #16a34a; }
+
+.btn-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: #636e72; font-size: 13px; font-weight: 600;
+  text-decoration: none; margin-bottom: 16px;
+}
+
+.btn-back:hover { color: #1a1a2e; }
+
+.divider { height: 1px; background: #edf2f7; margin: 20px 0; }
+
+.section-sub { font-size: 13px; font-weight: 700; color: #636e72; margin-bottom: 14px; text-transform: uppercase; letter-spacing: .5px; }
+
+/* Скрываем поля юр. лица по умолчанию */
+.legal-fields { display: none; }
+
+.alert-error {
+  background: #fee2e2; color: #991b1b;
+  border-radius: 10px; padding: 12px 16px;
+  font-size: 13px; font-weight: 600; margin-bottom: 16px;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page">
+
+  <a href="{% url 'bank:requisites_list' %}" class="btn-back">← Назад к реквизитам</a>
+
+  {% for msg in messages %}
+  <div class="alert-error">{{ msg }}</div>
+  {% endfor %}
+
+  <div class="form-card">
+    <h2 class="form-title">🏦 Добавить реквизиты</h2>
+
+    <form method="POST">
+      {% csrf_token %}
+
+      <!-- Тип -->
+      <div class="form-group">
+        <label class="form-label">Тип получателя</label>
+        <select name="requisite_type" class="form-select" id="requisite_type" onchange="toggleLegal(this.value)">
+          <option value="individual">Физическое лицо</option>
+          <option value="legal">Юридическое лицо / ИП</option>
+        </select>
+      </div>
+
+      <!-- Общие поля -->
+      <div class="form-group">
+        <label class="form-label">ФИО получателя</label>
+        <input type="text" name="full_name" class="form-input" placeholder="Иванов Иван Иванович" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Название банка</label>
+        <input type="text" name="bank_name" class="form-input" placeholder="Мбанк, ОАО Банк Азии..." required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">БИК банка</label>
+        <input type="text" name="bik" class="form-input" placeholder="109007" maxlength="6" required>
+        <div class="form-hint">6 цифр — БИК банка в Кыргызстане</div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Расчётный счёт</label>
+        <input type="text" name="account_number" class="form-input" placeholder="1234567890123456" maxlength="16" required>
+        <div class="form-hint">16 цифр</div>
+      </div>
+
+      <!-- Поля для юр. лица -->
+      <div class="legal-fields" id="legal-fields">
+        <div class="divider"></div>
+        <div class="section-sub">Для юридического лица / ИП</div>
+
+        <div class="form-group">
+          <label class="form-label">Наименование организации</label>
+          <input type="text" name="company_name" class="form-input" placeholder='ООО "Компания"'>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">ИНН</label>
+          <input type="text" name="inn" class="form-input" placeholder="12345678901234" maxlength="14">
+          <div class="form-hint">14 цифр — ИНН организации</div>
+        </div>
+      </div>
+
+      <!-- Основные -->
+      <label class="form-check">
+        <input type="checkbox" name="is_default">
+        <span>Сделать основными реквизитами</span>
+      </label>
+
+      <button type="submit" class="btn-submit">Добавить реквизиты</button>
+    </form>
+  </div>
+
+</div>
+
+<script>
+function toggleLegal(val) {
+  const lf = document.getElementById('legal-fields');
+  lf.style.display = val === 'legal' ? 'block' : 'none';
+}
+</script>
+{% endblock %}

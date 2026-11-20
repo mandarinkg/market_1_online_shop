@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Заказды түзөтүү — FINE{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+    --green: #2ecc71;
+    --green-dark: #27ae60;
+    --green-light: #eafaf1;
+    --dark: #1a1a2e;
+    --gray: #636e72;
+    --border: #edf2f7;
+    --white: #fff;
+    --bg: #f7f8fc;
+}
+
+.edit-page {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 16px 8px 80px;
+}
+
+.edit-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.edit-header__back {
+    width: 36px; height: 36px;
+    background: var(--white);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--gray); font-size: 14px;
+    text-decoration: none;
+    transition: all 0.2s; flex-shrink: 0;
+}
+.edit-header__back:hover { border-color: var(--green); color: var(--green-dark); }
+
+.edit-header__title {
+    font-size: 18px; font-weight: 800; color: var(--dark); margin: 0;
+}
+
+.edit-item {
+    background: var(--white);
+    border-radius: 16px;
+    border: 1.5px solid var(--border);
+    padding: 14px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: border-color 0.2s;
+}
+
+.edit-item:focus-within { border-color: var(--green); }
+
+.edit-item__img {
+    width: 56px; height: 56px;
+    border-radius: 12px; object-fit: cover;
+    border: 1px solid var(--border); flex-shrink: 0;
+    background: var(--bg);
+}
+
+.edit-item__placeholder {
+    width: 56px; height: 56px;
+    border-radius: 12px; background: var(--bg);
+    border: 1px solid var(--border); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+}
+
+.edit-item__info { flex: 1; min-width: 0; }
+.edit-item__name {
+    font-size: 13px; font-weight: 700; color: var(--dark);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin: 0 0 3px;
+}
+.edit-item__stock { font-size: 11px; color: var(--gray); }
+
+.qty-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.qty-row {
+    display: flex;
+    align-items: center;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.qty-btn {
+    width: 36px; height: 36px;
+    background: none; border: none;
+    font-size: 18px; font-weight: 700;
+    color: var(--dark); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s;
+}
+.qty-btn:hover:not(:disabled) { background: var(--green-light); color: var(--green-dark); }
+.qty-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+.qty-num {
+    font-size: 15px; font-weight: 800; color: var(--dark);
+    min-width: 32px; text-align: center; padding: 0 4px;
+}
+
+.qty-warn {
+    font-size: 10px; color: #e74c3c;
+    font-weight: 600; min-height: 14px; text-align: center;
+}
+
+.edit-footer {
+    position: fixed;
+    bottom: 64px; left: 0; right: 0;
+    background: var(--white);
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+    z-index: 100;
+}
+
+.edit-footer__inner {
+    max-width: 640px;
+    margin: 0 auto;
+    display: flex; gap: 10px;
+}
+
+.btn-save {
+    flex: 1; padding: 13px;
+    background: var(--green); color: #fff;
+    border: none; border-radius: 12px;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer; font-family: 'Inter', sans-serif;
+    transition: background 0.2s;
+}
+.btn-save:hover { background: var(--green-dark); }
+
+.btn-back-footer {
+    padding: 13px 20px;
+    background: var(--bg); color: var(--gray);
+    border: 1.5px solid var(--border); border-radius: 12px;
+    font-size: 14px; font-weight: 600;
+    text-decoration: none;
+    display: flex; align-items: center;
+    transition: all 0.2s;
+}
+.btn-back-footer:hover { border-color: var(--gray); color: var(--dark); }
+
+@media (min-width: 769px) {
+    .edit-page { padding: 24px 20px 100px; }
+    .edit-footer { bottom: 0; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="edit-page">
+
+    <div class="edit-header">
+        <a href="{% url 'orders:client_orders' %}" class="edit-header__back">
+            <i class="fas fa-arrow-left"></i>
+        </a>
+        <h1 class="edit-header__title">Заказ #{{ order.id }} — түзөтүү</h1>
+    </div>
+
+    <form method="post" id="editForm">
+        {% csrf_token %}
+
+        {% for item in order.items.all %}
+        <div class="edit-item">
+            {% if item.product and item.product.image %}
+            <img src="{{ item.product.image.url }}" class="edit-item__img" alt="">
+            {% else %}
+            <div class="edit-item__placeholder">📦</div>
+            {% endif %}
+
+            <div class="edit-item__info">
+                <div class="edit-item__name">{{ item.product_name }}</div>
+                <div class="edit-item__stock">
+                    Кампада: <strong>{{ item.product.stock }}</strong> шт
+                </div>
+            </div>
+
+            <div class="qty-box">
+                <div class="qty-row">
+                    <button type="button" class="qty-btn" onclick="changeQty('{{ item.id }}', -1)">−</button>
+                    <span class="qty-num" id="qty-{{ item.id }}">{{ item.quantity }}</span>
+                    <button type="button" class="qty-btn" id="inc-{{ item.id }}"
+                            onclick="changeQty('{{ item.id }}', 1)"
+                            {% if item.quantity >= item.product.stock %}disabled{% endif %}>+</button>
+                </div>
+                <div class="qty-warn" id="warn-{{ item.id }}"></div>
+            </div>
+
+            <input type="hidden" name="item_ids" value="{{ item.id }}">
+            <input type="hidden" name="quantities" id="qtyinput-{{ item.id }}" value="{{ item.quantity }}">
+        </div>
+
+        <script>
+        (function() {
+            var stock_{{ item.id }} = {{ item.product.stock }};
+        })();
+        </script>
+        {% endfor %}
+
+    </form>
+
+    <div class="edit-footer">
+        <div class="edit-footer__inner">
+            <a href="{% url 'orders:client_orders' %}" class="btn-back-footer">Артка</a>
+            <button class="btn-save" onclick="document.getElementById('editForm').submit()">
+                <i class="fas fa-save"></i> Сактоо
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<script>
+const stocks = {
+    {% for item in order.items.all %}
+    '{{ item.id }}': {{ item.product.stock }},
+    {% endfor %}
+};
+
+function changeQty(id, val) {
+    const numEl = document.getElementById('qty-' + id);
+    const inputEl = document.getElementById('qtyinput-' + id);
+    const incBtn = document.getElementById('inc-' + id);
+    const warnEl = document.getElementById('warn-' + id);
+    const max = stocks[id];
+
+    let qty = parseInt(numEl.textContent) + val;
+    if (qty < 1) qty = 1;
+    if (qty >= max) {
+        qty = max;
+        incBtn.disabled = true;
+        warnEl.textContent = 'Макс: ' + max + ' шт';
+    } else {
+        incBtn.disabled = false;
+        warnEl.textContent = '';
+    }
+
+    numEl.textContent = qty;
+    inputEl.value = qty;
+}
+</script>
+{% endblock %}

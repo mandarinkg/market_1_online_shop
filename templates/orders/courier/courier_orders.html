@@ -1,0 +1,556 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% load static %}
+
+{% block title %}Заказдарым — FINE{% endblock %}
+{% block header_title %}Заказдарым{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+    --green: #2ecc71;
+    --green-dark: #27ae60;
+    --green-light: #eafaf1;
+    --purple: #9b59b6;
+    --purple-light: #f5eef8;
+    --dark: #1a1a2e;
+    --gray: #636e72;
+    --border: #edf2f7;
+    --white: #fff;
+    --bg: #f7f8fc;
+}
+
+.courier-page { max-width: 700px; }
+
+/* TABS */
+.tabs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+    background: var(--white);
+    border-radius: 16px;
+    border: 1.5px solid var(--border);
+    padding: 6px;
+}
+
+.tab-btn {
+    padding: 10px 8px;
+    border-radius: 10px;
+    border: none;
+    background: transparent;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gray);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+}
+
+.tab-btn .tab-icon { font-size: 18px; }
+.tab-btn .tab-count {
+    background: #edf2f7;
+    color: var(--gray);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 7px;
+    border-radius: 999px;
+    min-width: 20px;
+    text-align: center;
+}
+
+.tab-btn.active {
+    background: var(--green-light);
+    color: var(--green-dark);
+}
+
+.tab-btn.active .tab-count {
+    background: var(--green);
+    color: #fff;
+}
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* ORDER CARD */
+.order-card {
+    background: var(--white);
+    border-radius: 16px;
+    border: 1.5px solid var(--border);
+    margin-bottom: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+}
+
+.order-card.open { border-color: var(--green); }
+
+.order-header {
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+}
+
+.order-num {
+    width: 40px; height: 40px;
+    background: var(--bg);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 800; color: var(--dark);
+    flex-shrink: 0;
+    border: 1.5px solid var(--border);
+}
+
+.order-meta { flex: 1; min-width: 0; }
+.order-meta__name { font-size: 14px; font-weight: 700; color: var(--dark); margin: 0 0 2px; }
+.order-meta__addr {
+    font-size: 12px; color: var(--gray);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.order-chevron {
+    color: #b2bec3;
+    font-size: 12px;
+    transition: transform 0.3s;
+    flex-shrink: 0;
+}
+
+.order-card.open .order-chevron { transform: rotate(180deg); color: var(--green); }
+
+/* ORDER BODY */
+.order-body {
+    display: none;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+}
+
+.order-card.open .order-body { display: block; }
+
+/* INFO SECTION */
+.order-info-section {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.order-info-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--gray);
+    margin: 0 0 10px;
+}
+
+.info-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+}
+
+.info-row:last-child { border-bottom: none; }
+
+.info-row__icon {
+    width: 28px; height: 28px;
+    background: var(--white);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    border: 1px solid var(--border);
+}
+
+.info-row__label { font-size: 11px; color: var(--gray); }
+.info-row__value { font-weight: 600; color: var(--dark); }
+
+/* ITEMS */
+.order-items-section { padding: 14px 16px; border-bottom: 1px solid var(--border); }
+
+.order-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.order-item:last-child { border-bottom: none; }
+
+.order-item__check {
+    width: 22px; height: 22px;
+    border: 2px solid var(--border);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: all 0.2s;
+    background: var(--white);
+}
+
+.order-item__check.checked {
+    background: var(--green);
+    border-color: var(--green);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.order-item__img {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--white);
+    border: 1px solid var(--border);
+}
+
+.order-item__img-placeholder {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.order-item__info { flex: 1; min-width: 0; }
+.order-item__name {
+    font-size: 13px; font-weight: 600; color: var(--dark);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.order-item__qty { font-size: 11px; color: var(--gray); }
+.order-item__price { font-size: 13px; font-weight: 700; color: var(--dark); flex-shrink: 0; }
+
+/* ACTION BUTTONS */
+.order-action { padding: 12px 16px; }
+
+.btn-accept {
+    width: 100%;
+    padding: 13px;
+    border-radius: 12px;
+    border: none;
+    font-size: 14px; font-weight: 700;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    text-decoration: none;
+}
+
+.btn-accept--disabled {
+    background: #edf2f7;
+    color: #b2bec3;
+    pointer-events: none;
+}
+
+.btn-accept--active {
+    background: var(--green);
+    color: #fff;
+}
+
+.btn-accept--active:hover { background: var(--green-dark); color: #fff; }
+
+.btn-accept--delivered {
+    background: var(--green);
+    color: #fff;
+}
+
+.btn-accept--delivered:hover { background: var(--green-dark); color: #fff; }
+
+/* COMPLETED */
+.completed-card {
+    background: var(--white);
+    border-radius: 14px;
+    border: 1.5px solid var(--border);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.completed-card__icon {
+    width: 40px; height: 40px;
+    background: var(--green-light);
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+}
+
+.completed-card__num { font-size: 14px; font-weight: 700; color: var(--dark); }
+.completed-card__date { font-size: 12px; color: var(--gray); }
+
+/* EMPTY */
+.empty-state {
+    text-align: center;
+    padding: 48px 20px;
+    color: #b2bec3;
+}
+.empty-state i { font-size: 40px; margin-bottom: 12px; display: block; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="courier-page">
+
+    <!-- TABS -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab(event,'tab1')">
+            <span class="tab-icon">📦</span>
+            <span>Доставки</span>
+            <span class="tab-count">{{ delivery_orders|length }}</span>
+        </button>
+        <button class="tab-btn" onclick="openTab(event,'tab2')">
+            <span class="tab-icon">🛣️</span>
+            <span>Маршрут</span>
+            <span class="tab-count">{{ route_orders|length }}</span>
+        </button>
+        <button class="tab-btn" onclick="openTab(event,'tab3')">
+            <span class="tab-icon">✅</span>
+            <span>Аяктады</span>
+            <span class="tab-count">{{ completed_orders|length }}</span>
+        </button>
+    </div>
+
+    <!-- TAB 1: ДОСТАВКИ -->
+    <div id="tab1" class="tab-content active">
+        {% for order in delivery_orders %}
+        <div class="order-card" id="order-{{ order.id }}">
+            <div class="order-header" onclick="toggleCard('order-{{ order.id }}')">
+                <div class="order-num">#{{ order.id }}</div>
+                <div class="order-meta">
+                    <div class="order-meta__name">{{ order.full_name|default:"—" }}</div>
+                    <div class="order-meta__addr">📍 {{ order.address|default:"Дарек жок"|truncatechars:30 }}</div>
+                </div>
+                <i class="fas fa-chevron-down order-chevron"></i>
+            </div>
+            <div class="order-body">
+
+                <!-- БАЙЛАНЫШ МААЛЫМАТ -->
+                <div class="order-info-section">
+                    <div class="order-info-title">👤 Кардар маалыматы</div>
+                    <div class="info-row">
+                        <div class="info-row__icon">👤</div>
+                        <div>
+                            <div class="info-row__label">Аты-жөнү</div>
+                            <div class="info-row__value">{{ order.full_name|default:"—" }}</div>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-row__icon">📱</div>
+                        <div>
+                            <div class="info-row__label">Телефон</div>
+                            <div class="info-row__value">
+                                <a href="tel:{{ order.phone }}" style="color:#2ecc71; text-decoration:none;">
+                                    {{ order.phone|default:"—" }}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-row__icon">📍</div>
+                        <div>
+                            <div class="info-row__label">Дарек</div>
+                            <div class="info-row__value">{{ order.address|default:"—" }}</div>
+                        </div>
+                    </div>
+                    {% if order.comment %}
+                    <div class="info-row">
+                        <div class="info-row__icon">💬</div>
+                        <div>
+                            <div class="info-row__label">Комментарий</div>
+                            <div class="info-row__value">{{ order.comment }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- ТОВАРЛАР -->
+                <div class="order-items-section">
+                    <div class="order-info-title">📦 Товарлар</div>
+                    {% for item in order.items.all %}
+                    <div class="order-item">
+                        <div class="order-item__check" onclick="toggleCheck(this, 'order-{{ order.id }}')" id="check-{{ order.id }}-{{ forloop.counter }}">
+                        </div>
+                        {% if item.product and item.product.image %}
+                        <img src="{{ item.product.image.url }}" class="order-item__img" alt="">
+                        {% else %}
+                        <div class="order-item__img-placeholder">📦</div>
+                        {% endif %}
+                        <div class="order-item__info">
+                            <div class="order-item__name">{{ item.product_name }}</div>
+                            <div class="order-item__qty">{{ item.quantity }} шт</div>
+                        </div>
+                        <div class="order-item__price">{{ item.sale_price }} сом</div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <!-- КНОПКА -->
+                <div class="order-action">
+                    <a href="{% url 'orders:update_status' order.id 'on_the_way' %}"
+                       class="btn-accept btn-accept--disabled"
+                       id="btn-{{ order.id }}">
+                        <i class="fas fa-check"></i> Заказды кабыл алуу
+                    </a>
+                </div>
+
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <i class="fas fa-box-open"></i>
+            <p>Жеткирүүгө заказдар жок</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- TAB 2: МАРШРУТ -->
+    <div id="tab2" class="tab-content">
+        {% for order in route_orders %}
+        <div class="order-card" id="route-{{ order.id }}">
+            <div class="order-header" onclick="toggleCard('route-{{ order.id }}')">
+                <div class="order-num">#{{ order.id }}</div>
+                <div class="order-meta">
+                    <div class="order-meta__name">{{ order.full_name|default:"—" }}</div>
+                    <div class="order-meta__addr">📍 {{ order.address|default:"—"|truncatechars:30 }}</div>
+                </div>
+                <i class="fas fa-chevron-down order-chevron"></i>
+            </div>
+            <div class="order-body">
+
+                <div class="order-info-section">
+                    <div class="order-info-title">👤 Кардар маалыматы</div>
+                    <div class="info-row">
+                        <div class="info-row__icon">👤</div>
+                        <div>
+                            <div class="info-row__label">Аты-жөнү</div>
+                            <div class="info-row__value">{{ order.full_name|default:"—" }}</div>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-row__icon">📱</div>
+                        <div>
+                            <div class="info-row__label">Телефон</div>
+                            <div class="info-row__value">
+                                <a href="tel:{{ order.phone }}" style="color:#2ecc71; text-decoration:none;">
+                                    {{ order.phone|default:"—" }}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-row">
+                        <div class="info-row__icon">📍</div>
+                        <div>
+                            <div class="info-row__label">Дарек</div>
+                            <div class="info-row__value">{{ order.address|default:"—" }}</div>
+                        </div>
+                    </div>
+                    {% if order.comment %}
+                    <div class="info-row">
+                        <div class="info-row__icon">💬</div>
+                        <div>
+                            <div class="info-row__label">Комментарий</div>
+                            <div class="info-row__value">{{ order.comment }}</div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="order-items-section">
+                    <div class="order-info-title">📦 Товарлар</div>
+                    {% for item in order.items.all %}
+                    <div class="order-item">
+                        {% if item.product and item.product.image %}
+                        <img src="{{ item.product.image.url }}" class="order-item__img" alt="">
+                        {% else %}
+                        <div class="order-item__img-placeholder">📦</div>
+                        {% endif %}
+                        <div class="order-item__info">
+                            <div class="order-item__name">{{ item.product_name }}</div>
+                            <div class="order-item__qty">{{ item.quantity }} шт</div>
+                        </div>
+                        <div class="order-item__price">{{ item.sale_price }} сом</div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="order-action">
+                    <a href="{% url 'orders:update_status' order.id 'delivered' %}"
+                       class="btn-accept btn-accept--delivered">
+                        <i class="fas fa-check-double"></i> Жеткирдим ✓
+                    </a>
+                </div>
+
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <i class="fas fa-road"></i>
+            <p>Маршрутта заказдар жок</p>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- TAB 3: ЗАВЕРШЕННЫЕ -->
+    <div id="tab3" class="tab-content">
+        {% for order in completed_orders %}
+        <div class="completed-card">
+            <div class="completed-card__icon">✅</div>
+            <div>
+                <div class="completed-card__num">Заказ #{{ order.id }} — {{ order.full_name|default:"—" }}</div>
+                <div class="completed-card__date">{{ order.created_at|date:"d.m.Y H:i" }}</div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <i class="fas fa-check-circle"></i>
+            <p>Аяктаган заказдар жок</p>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
+
+<script>
+function openTab(evt, tabId) {
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    evt.currentTarget.classList.add('active');
+}
+
+function toggleCard(id) {
+    document.getElementById(id)?.classList.toggle('open');
+}
+
+function toggleCheck(el, orderId) {
+    el.classList.toggle('checked');
+    if (el.classList.contains('checked')) el.textContent = '✓';
+    else el.textContent = '';
+
+    const card = document.getElementById(orderId);
+    const checks = card.querySelectorAll('.order-item__check');
+    const btn = card.querySelector('.btn-accept');
+    const allChecked = Array.from(checks).every(c => c.classList.contains('checked'));
+
+    if (btn) {
+        if (allChecked && checks.length > 0) {
+            btn.classList.remove('btn-accept--disabled');
+            btn.classList.add('btn-accept--active');
+        } else {
+            btn.classList.remove('btn-accept--active');
+            btn.classList.add('btn-accept--disabled');
+        }
+    }
+}
+</script>
+{% endblock %}

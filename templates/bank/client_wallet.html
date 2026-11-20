@@ -1,0 +1,407 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Мой кошелёк — FINE{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root {
+    --green: #22c55e;
+    --green-dark: #16a34a;
+    --border: #e2e8f0;
+    --card: #fff;
+    --text: #1e293b;
+    --muted: #64748b;
+    --bg: #f8fafc;
+  }
+
+  * { box-sizing: border-box; }
+
+  .wallet-wrap {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 20px 16px 80px;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  .wallet-hero {
+    background: linear-gradient(135deg, #1a1a2e 0%, #0f2419 100%);
+    border-radius: 20px;
+    padding: 28px 24px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .wallet-hero::before {
+    content: '';
+    position: absolute;
+    width: 220px; height: 220px;
+    background: radial-gradient(circle, rgba(34,197,94,.2) 0%, transparent 70%);
+    top: -60px; right: -40px;
+  }
+
+  .wallet-hero-label { font-size: 12px; font-weight: 600; color: rgba(255,255,255,.5); text-transform: uppercase; letter-spacing: .8px; margin-bottom: 8px; }
+  .wallet-hero-amount { font-size: 36px; font-weight: 800; color: #fff; line-height: 1; margin-bottom: 6px; }
+  .wallet-hero-currency { font-size: 14px; color: rgba(255,255,255,.5); }
+
+  .wallet-hero-frozen {
+    display: inline-flex; align-items: center; gap: 5px;
+    margin-top: 14px;
+    background: rgba(255,255,255,.1);
+    border-radius: 20px; padding: 5px 12px;
+    font-size: 12px; color: rgba(255,255,255,.7); font-weight: 600;
+  }
+
+  .cashback-badge {
+    position: absolute; top: 20px; right: 20px;
+    background: rgba(34,197,94,.2);
+    border: 1px solid rgba(34,197,94,.3);
+    color: var(--green); border-radius: 20px;
+    padding: 5px 12px; font-size: 12px; font-weight: 700;
+  }
+
+  /* Быстрые действия */
+  .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+
+  .quick-btn {
+    background: var(--card); border: 1.5px solid var(--border);
+    border-radius: 14px; padding: 16px;
+    display: flex; align-items: center; gap: 12px;
+    text-decoration: none; cursor: pointer;
+    transition: all .2s; font-family: inherit; width: 100%;
+  }
+
+  .quick-btn:hover { border-color: var(--green); background: #f0fdf4; }
+
+  .quick-btn-icon {
+    width: 42px; height: 42px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+
+  .quick-btn-text { font-size: 13px; font-weight: 700; color: var(--text); }
+  .quick-btn-sub  { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+  /* Секции */
+  .section { background: var(--card); border: 1.5px solid var(--border); border-radius: 16px; margin-bottom: 16px; overflow: hidden; }
+
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px; border-bottom: 1px solid var(--border);
+  }
+
+  .section-title { font-size: 14px; font-weight: 700; color: var(--text); margin: 0; }
+
+  /* Форма пополнения */
+  .topup-form { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+  .form-row { display: flex; gap: 10px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; flex: 1; }
+  .form-label { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+
+  .form-input {
+    padding: 10px 12px; border: 1.5px solid var(--border);
+    border-radius: 8px; font-size: 14px; font-family: inherit;
+    color: var(--text); outline: none; transition: border-color .2s;
+  }
+
+  .form-input:focus { border-color: var(--green); }
+
+  /* Быстрые суммы */
+  .quick-amounts { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .amount-chip {
+    padding: 6px 14px; border-radius: 20px;
+    font-size: 13px; font-weight: 600;
+    border: 1.5px solid var(--border);
+    background: var(--bg); color: var(--text);
+    cursor: pointer; transition: all .15s;
+  }
+
+  .amount-chip:hover { border-color: var(--green); color: var(--green); background: #f0fdf4; }
+
+  .btn-topup {
+    background: var(--green); color: #fff; border: none;
+    padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: background .2s; width: 100%; font-family: inherit;
+  }
+
+  .btn-topup:hover { background: var(--green-dark); }
+
+  /* Активные заявки */
+  .topup-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 18px; border-bottom: 1px solid #f1f5f9;
+    gap: 10px; flex-wrap: wrap;
+  }
+
+  .topup-item:last-child { border-bottom: none; }
+
+  .status-pill { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+  .s-pending  { background: #fef3c7; color: #92400e; }
+  .s-approved { background: #d1fae5; color: #065f46; }
+  .s-rejected { background: #fee2e2; color: #991b1b; }
+
+  /* История операций */
+  .ledger-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 18px; border-bottom: 1px solid #f1f5f9;
+  }
+
+  .ledger-item:last-child { border-bottom: none; }
+
+  .ledger-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; flex-shrink: 0;
+  }
+
+  .ledger-info { flex: 1; min-width: 0; }
+  .ledger-type { font-size: 13px; font-weight: 600; color: var(--text); }
+  .ledger-date { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+  .ledger-amount { font-size: 14px; font-weight: 800; white-space: nowrap; }
+  .ledger-amount.credit { color: var(--green); }
+  .ledger-amount.debit  { color: #ef4444; }
+
+  /* Вывод средств */
+  .payout-form { padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; }
+
+  .btn-payout {
+    background: var(--green); color: #fff; border: none;
+    padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: background .2s; width: 100%; font-family: inherit;
+  }
+
+  .btn-payout:hover { background: var(--green-dark); }
+
+  .payout-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 18px; border-bottom: 1px solid #f1f5f9; gap: 10px; flex-wrap: wrap;
+  }
+
+  .payout-item:last-child { border-bottom: none; }
+
+  /* Алерты */
+  .alert { padding: 12px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; margin-bottom: 14px; }
+  .alert-success { background: #dcfce7; color: #166534; }
+  .alert-error   { background: #fee2e2; color: #991b1b; }
+
+  .empty { text-align: center; padding: 20px; color: var(--muted); font-size: 13px; }
+
+  .cashback-stub {
+    background: var(--bg); border: 1px dashed var(--border);
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 16px;
+    text-align: center; color: var(--muted); font-size: 13px;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wallet-wrap">
+
+  {% for msg in messages %}
+  <div class="alert alert-{% if msg.tags == 'error' %}error{% else %}success{% endif %}">{{ msg }}</div>
+  {% endfor %}
+
+  <!-- HERO БАЛАНС -->
+  <div class="wallet-hero">
+    {% if cashback_config.is_active %}
+    <div class="cashback-badge">💚 Кэшбэк {{ cashback_config.percent }}%</div>
+    {% else %}
+    <div class="cashback-badge" style="color:rgba(255,255,255,.4);border-color:rgba(255,255,255,.1);">Кэшбэк скоро</div>
+    {% endif %}
+
+    <div class="wallet-hero-label">Мой кошелёк</div>
+    <div class="wallet-hero-amount">{{ wallet.balance }}</div>
+    <div class="wallet-hero-currency">Кыргызский сом (KGS)</div>
+
+    {% if frozen_total > 0 %}
+    <div class="wallet-hero-frozen">🔒 {{ frozen_total }} KGS заморожено</div>
+    {% endif %}
+  </div>
+
+  {% if not cashback_config.is_active %}
+  <div class="cashback-stub">🎁 Кэшбэк программа скоро будет запущена!</div>
+  {% endif %}
+
+  <!-- БЫСТРЫЕ ДЕЙСТВИЯ -->
+  <div class="quick-actions">
+    <a href="{% url 'bank:requisites_list' %}" class="quick-btn">
+      <div class="quick-btn-icon" style="background:#dbeafe;">🏦</div>
+      <div>
+        <div class="quick-btn-text">Реквизиты</div>
+        <div class="quick-btn-sub">Для вывода</div>
+      </div>
+    </a>
+    <a href="{% url 'orders:client_orders' %}" class="quick-btn">
+      <div class="quick-btn-icon" style="background:#dcfce7;">🛍️</div>
+      <div>
+        <div class="quick-btn-text">Мои заказы</div>
+        <div class="quick-btn-sub">История</div>
+      </div>
+    </a>
+  </div>
+
+  <!-- ПОПОЛНИТЬ БАЛАНС -->
+  <div class="section">
+    <div class="section-head">
+      <h3 class="section-title">💳 Пополнить баланс</h3>
+    </div>
+
+    {% if pending_topups %}
+    <div style="padding:14px 18px;background:#fef9e7;border-bottom:1px solid var(--border);">
+      <span style="font-size:13px;color:#92400e;font-weight:600;">
+        ⏳ Есть активная заявка на пополнение. Ожидайте подтверждения.
+      </span>
+    </div>
+    {% else %}
+    <form method="POST" action="{% url 'bank:topup_create' %}">
+      {% csrf_token %}
+      <div class="topup-form">
+
+        <!-- Быстрые суммы -->
+        <div>
+          <div class="form-label" style="margin-bottom:8px;">Быстрый выбор</div>
+          <div class="quick-amounts">
+            <button type="button" class="amount-chip" onclick="setAmount(500)">500</button>
+            <button type="button" class="amount-chip" onclick="setAmount(1000)">1 000</button>
+            <button type="button" class="amount-chip" onclick="setAmount(2000)">2 000</button>
+            <button type="button" class="amount-chip" onclick="setAmount(5000)">5 000</button>
+            <button type="button" class="amount-chip" onclick="setAmount(10000)">10 000</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Сумма (KGS)</label>
+          <input type="number" name="amount" id="topupAmount" class="form-input"
+                 placeholder="Введите сумму" step="1" min="1" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Комментарий (необязательно)</label>
+          <input type="text" name="comment" class="form-input"
+                 placeholder="Например: перевод с МБанка">
+        </div>
+
+        <!-- Инфо блок -->
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:12px 14px;">
+          <div style="font-size:12px;color:#166534;font-weight:600;margin-bottom:4px;">ℹ️ Как это работает</div>
+          <div style="font-size:12px;color:#16a34a;line-height:1.5;">
+            1. Отправьте заявку<br>
+            2. Переведите деньги на реквизиты маркетплейса<br>
+            3. Администратор подтвердит и зачислит баланс<br>
+            <strong>В будущем: автоматическое списание с карты</strong>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-topup">💳 Отправить заявку на пополнение</button>
+      </div>
+    </form>
+    {% endif %}
+  </div>
+
+  <!-- АКТИВНЫЕ ЗАЯВКИ НА ПОПОЛНЕНИЕ -->
+  {% if pending_topups %}
+  <div class="section">
+    <div class="section-head">
+      <h3 class="section-title">⏳ Заявки на пополнение</h3>
+    </div>
+    {% for t in pending_topups %}
+    <div class="topup-item">
+      <div>
+        <div style="font-size:14px;font-weight:700;">+{{ t.amount }} KGS</div>
+        {% if t.comment %}
+        <div style="font-size:12px;color:var(--muted);">{{ t.comment }}</div>
+        {% endif %}
+      </div>
+      <div style="text-align:right;">
+        <span class="status-pill s-pending">⏳ Ожидает</span>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px;">{{ t.created_at|date:"d.m.Y H:i" }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ВЫВОД СРЕДСТВ -->
+  <div class="section">
+    <div class="section-head">
+      <h3 class="section-title">💸 Вывести средства</h3>
+      <a href="{% url 'bank:requisites_list' %}" style="font-size:13px;color:var(--green);font-weight:600;text-decoration:none;">Реквизиты →</a>
+    </div>
+
+    {% if pending_payouts %}
+    <div style="padding:14px 18px;background:#fef9e7;">
+      <span style="font-size:13px;color:#92400e;font-weight:600;">⏳ Есть активная заявка на вывод.</span>
+    </div>
+    {% elif wallet.balance <= 0 %}
+    <div class="empty">Недостаточно средств</div>
+    {% else %}
+    <form method="POST" action="{% url 'bank:client_payout_create' %}">
+      {% csrf_token %}
+      <div class="payout-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Сумма (KGS)</label>
+            <input type="number" name="amount" class="form-input"
+                   placeholder="500.00" step="0.01" min="1"
+                   max="{{ wallet.balance }}" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Реквизиты</label>
+            <select name="requisites_id" class="form-input" required>
+              <option value="">Выберите</option>
+              {% for r in requisites %}
+                {% if r.is_verified %}
+                <option value="{{ r.id }}" {% if r.is_default %}selected{% endif %}>
+                  {{ r.bank_name }} · ****{{ r.account_number|slice:"-4:" }}
+                </option>
+                {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="btn-payout">Подать заявку на вывод</button>
+      </div>
+    </form>
+    {% endif %}
+  </div>
+
+  <!-- ИСТОРИЯ ОПЕРАЦИЙ -->
+  <div class="section">
+    <div class="section-head">
+      <h3 class="section-title">📋 История операций</h3>
+    </div>
+    {% if ledger %}
+      {% for entry in ledger %}
+      <div class="ledger-item">
+        <div class="ledger-icon" style="background:{% if entry.entry_type == 'credit' %}#dcfce7{% else %}#fee2e2{% endif %};">
+          {% if entry.transaction.transaction_type == 'cashback' %}🎁
+          {% elif entry.transaction.transaction_type == 'top_up' %}💳
+          {% elif entry.transaction.transaction_type == 'refund' %}↩️
+          {% elif entry.entry_type == 'credit' %}▲
+          {% else %}▼{% endif %}
+        </div>
+        <div class="ledger-info">
+          <div class="ledger-type">{{ entry.transaction.get_transaction_type_display }}</div>
+          <div class="ledger-date">{{ entry.created_at|date:"d.m.Y H:i" }}</div>
+        </div>
+        <div class="ledger-amount {% if entry.entry_type == 'credit' %}credit{% else %}debit{% endif %}">
+          {% if entry.entry_type == 'credit' %}+{% else %}-{% endif %}{{ entry.amount }} KGS
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty">Операций пока нет</div>
+    {% endif %}
+  </div>
+
+</div>
+
+<script>
+function setAmount(val) {
+  document.getElementById('topupAmount').value = val;
+}
+</script>
+{% endblock %}

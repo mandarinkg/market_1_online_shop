@@ -1,0 +1,423 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard — FINE{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+    :root {
+        --green: #2ecc71;
+        --green-dark: #27ae60;
+        --green-light: #eafaf1;
+        --dark: #1a1a2e;
+        --text: #2d3436;
+        --gray: #636e72;
+        --border: #edf2f7;
+        --bg: #f7f8fc;
+        --white: #fff;
+        --sidebar-w: 240px;
+        --header-h: 56px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        font-family: 'Inter', sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        min-height: 100vh;
+    }
+
+    a { text-decoration: none; color: inherit; }
+
+    /* ===== HEADER ===== */
+    .db-header {
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        height: var(--header-h);
+        background: var(--dark);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 20px;
+        z-index: 300;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.15);
+    }
+
+    .db-header__left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .db-header__logo {
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--green);
+        border: 2px solid var(--green);
+        padding: 3px 10px;
+        border-radius: 8px;
+    }
+
+    .db-header__title {
+        font-size: 14px;
+        font-weight: 600;
+        color: rgba(255,255,255,0.7);
+    }
+
+    .db-header__right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .db-header__user {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 500;
+    }
+
+    .db-header__avatar {
+        width: 32px; height: 32px;
+        background: var(--green);
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 14px; font-weight: 700; color: #fff;
+    }
+
+    .db-header__role {
+        background: rgba(46,204,113,0.2);
+        border: 1px solid rgba(46,204,113,0.3);
+        color: var(--green);
+        font-size: 11px;
+        font-weight: 600;
+        padding: 2px 8px;
+        border-radius: 999px;
+    }
+
+    .db-header__logout {
+        display: flex; align-items: center; gap: 6px;
+        color: rgba(255,255,255,0.6);
+        font-size: 13px;
+        padding: 6px 12px;
+        border-radius: 8px;
+        border: 1px solid rgba(255,255,255,0.15);
+        transition: all 0.2s;
+    }
+
+    .db-header__logout:hover {
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+    }
+
+    /* Мобил меню кнопка */
+    .db-header__menu-btn {
+        display: none;
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 20px;
+        cursor: pointer;
+        padding: 4px 8px;
+    }
+
+    /* ===== LAYOUT ===== */
+    .db-layout {
+        display: flex;
+        padding-top: var(--header-h);
+        min-height: 100vh;
+    }
+
+    /* ===== SIDEBAR ===== */
+    .db-sidebar {
+        position: fixed;
+        top: var(--header-h);
+        left: 0;
+        bottom: 0;
+        width: var(--sidebar-w);
+        background: var(--white);
+        border-right: 1px solid var(--border);
+        overflow-y: auto;
+        z-index: 200;
+        transition: transform 0.3s ease;
+        padding: 16px 0;
+    }
+
+    .db-sidebar::-webkit-scrollbar { width: 4px; }
+    .db-sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .db-nav__section { margin-bottom: 8px; }
+
+    .db-nav__label {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--gray);
+        padding: 8px 16px 4px;
+    }
+
+    .db-nav__link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        font-size: 13.5px;
+        font-weight: 500;
+        color: var(--gray);
+        border-left: 3px solid transparent;
+        transition: all 0.15s;
+    }
+
+    .db-nav__link:hover {
+        background: var(--green-light);
+        color: var(--green-dark);
+        border-left-color: var(--green);
+    }
+
+    .db-nav__link.active {
+        background: var(--green-light);
+        color: var(--green-dark);
+        border-left-color: var(--green);
+        font-weight: 600;
+    }
+
+    .db-nav__link i { width: 16px; text-align: center; font-size: 14px; }
+
+    .db-nav__divider {
+        height: 1px;
+        background: var(--border);
+        margin: 8px 16px;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .db-main {
+        margin-left: var(--sidebar-w);
+        flex: 1;
+        padding: 24px;
+        min-width: 0;
+    }
+
+    /* ===== OVERLAY (mobile) ===== */
+    .db-overlay {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.4);
+        z-index: 150;
+    }
+
+    .db-overlay.show { display: block; }
+
+    /* ===== MOBILE ===== */
+    @media (max-width: 768px) {
+        :root { --sidebar-w: 260px; }
+
+        .db-header__menu-btn { display: block; }
+        .db-header__title { display: none; }
+        .db-header__user span:not(.db-header__avatar) { display: none; }
+
+        .db-sidebar {
+            transform: translateX(-100%);
+        }
+
+        .db-sidebar.open {
+            transform: translateX(0);
+            box-shadow: 4px 0 20px rgba(0,0,0,0.15);
+        }
+
+        .db-main {
+            margin-left: 0;
+            padding: 16px;
+        }
+    }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="db-header">
+    <div class="db-header__left">
+        <button class="db-header__menu-btn" id="menuBtn">
+            <i class="fas fa-bars"></i>
+        </button>
+        <a href="/" class="db-header__logo">FINE</a>
+        <span class="db-header__title">{% block header_title %}Dashboard{% endblock %}</span>
+    </div>
+    <div class="db-header__right">
+        <div class="db-header__user">
+            <div class="db-header__avatar">{{ user.username|first|upper }}</div>
+            <span>{{ user.username }}</span>
+            <span class="db-header__role">
+                {% if user.is_superuser %}Админ
+                {% elif user.role == 'seller' %}Продавец
+                {% elif user.role == 'employee' %}Сотрудник
+                {% elif user.role == 'courier' %}Курьер
+                {% else %}Клиент{% endif %}
+            </span>
+        </div>
+        <a href="{% url 'accounts:logout' %}" class="db-header__logout">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Выйти</span>
+        </a>
+    </div>
+</header>
+
+<!-- OVERLAY -->
+<div class="db-overlay" id="overlay"></div>
+
+<!-- LAYOUT -->
+<div class="db-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="db-sidebar" id="sidebar">
+
+        {% if user.is_superuser or user.is_staff %}
+        <div class="db-nav__section">
+            <div class="db-nav__label">Администрирование</div>
+            <a href="{% url 'dashboard:admin_dashboard' %}" class="db-nav__link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
+                <i class="fas fa-chart-pie"></i> Панель
+            </a>
+            <a href="{% url 'dashboard:admin_sellers_list' %}" class="db-nav__link {% if request.resolver_match.url_name == 'admin_sellers_list' %}active{% endif %}">
+                <i class="fas fa-store"></i> Продавцы
+            </a>
+            <a href="{% url 'dashboard:admin_employees_list' %}" class="db-nav__link {% if request.resolver_match.url_name == 'admin_employees_list' %}active{% endif %}">
+                <i class="fas fa-user-tie"></i> Сотрудники
+            </a>
+            <a href="{% url 'dashboard:admin_couriers_list' %}" class="db-nav__link {% if request.resolver_match.url_name == 'admin_couriers_list' %}active{% endif %}">
+                <i class="fas fa-truck"></i> Курьеры
+            </a>
+
+                    <!-- Выплаты -->
+            <a href="{% url 'bank:admin_payout_list' %}" 
+            class="db-nav__link {% if 'payouts' in request.path %}active{% endif %}">
+                <i class="fas fa-money-bill-wave"></i> Выплаты
+                {% if pending_payouts_count > 0 %}
+                <span style="margin-left:auto;background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;">
+                    {{ pending_payouts_count }}
+                </span>
+                {% endif %}
+            </a>
+
+            <!-- Пополнения -->
+            <a href="{% url 'bank:admin_topup_list' %}" 
+            class="db-nav__link {% if 'topups' in request.path %}active{% endif %}">
+                <i class="fas fa-arrow-circle-down"></i> Пополнения
+                {% if pending_topups_count > 0 %}
+                <span style="margin-left:auto;background:#22c55e;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px;">
+                    {{ pending_topups_count }}
+                </span>
+                {% endif %}
+            </a>
+
+            <a href="/admin/" class="db-nav__link" target="_blank">
+                <i class="fas fa-shield-alt"></i> Django Admin
+            </a>
+        </div>
+        <div class="db-nav__divider"></div>
+        {% endif %}
+        {% if user.role == 'seller' or user.is_staff %}
+        <div class="db-nav__section">
+            <div class="db-nav__label">Продавец</div>
+            <a href="{% url 'dashboard:seller' %}" class="db-nav__link">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="{% url 'products:create' %}" class="db-nav__link">
+                <i class="fas fa-plus"></i> Добавить товар
+            </a>
+            <a href="{% url 'products:list' %}" class="db-nav__link">
+                <i class="fas fa-box"></i> Мои товары
+            </a>
+            <a href="{% url 'shops:list' %}" class="db-nav__link">
+                <i class="fas fa-store"></i> Мои магазины
+            </a>
+              <a href="{% url 'orders:seller_analytics' %}" class="db-nav__link">
+                <i class="fas fa-chart-line"></i> Аналитика
+            </a>
+            <a href="{% url 'bank:seller_balance' %}" 
+                class="db-nav__link"
+                class="nav-item {% if 'bank' in request.path %}active{% endif %}">
+                    <i class="fas fa-wallet"></i>
+                    <span>Баланс</span>
+            </a>
+        </div>
+        <div class="db-nav__divider"></div>
+        {% endif %}
+
+        {% if user.role == 'employee' %}
+        <div class="db-nav__section">
+            <div class="db-nav__label">Сотрудник</div>
+            <a href="{% url 'dashboard:employee' %}" class="db-nav__link">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="{% url 'orders:employee_new_orders' %}" class="db-nav__link">
+                <i class="fas fa-inbox"></i> Новые заказы
+            </a>
+            <a href="{% url 'orders:employee_processing_orders' %}" class="db-nav__link">
+                <i class="fas fa-tasks"></i> В обработке
+            </a>
+            <a href="{% url 'orders:employee_delivery_orders' %}" class="db-nav__link">
+                <i class="fas fa-truck"></i> На доставку
+            </a>
+        </div>
+        <div class="db-nav__divider"></div>
+        {% endif %}
+
+        {% if user.role == 'courier' %}
+        <div class="db-nav__section">
+            <div class="db-nav__label">Курьер</div>
+            <a href="{% url 'dashboard:courier' %}" class="db-nav__link">
+                <i class="fas fa-home"></i> Dashboard
+            </a>
+            <a href="{% url 'orders:courier_orders' %}" class="db-nav__link">
+                <i class="fas fa-route"></i> Доставки
+            </a>
+        </div>
+        <div class="db-nav__divider"></div>
+        {% endif %}
+
+        <div class="db-nav__section">
+            <div class="db-nav__label">Навигация</div>
+            <a href="/" class="db-nav__link">
+                <i class="fas fa-globe"></i> На сайт
+            </a>
+            <a href="{% url 'orders:client_orders' %}" class="db-nav__link">
+                <i class="fas fa-shopping-bag"></i> Заказы
+            </a>
+        </div>
+
+    </aside>
+
+    <!-- MAIN -->
+    <main class="db-main">
+        {% block content %}{% endblock %}
+    </main>
+
+</div>
+
+<script>
+const menuBtn = document.getElementById('menuBtn');
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('overlay');
+
+menuBtn.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('show');
+});
+
+overlay.addEventListener('click', () => {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('show');
+});
+</script>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

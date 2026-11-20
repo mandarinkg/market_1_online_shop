@@ -1,0 +1,86 @@
+{% load static %}
+
+<div class="product-card {% if product.stock <= 0 %}out-of-stock-card{% endif %}" id="product-card-{{ product.id }}">
+
+    <!-- ФОТО БЛОК -->
+    <div class="product-img-box">
+
+        {% if product.discount_percent > 0 and product.stock > 0 %}
+        <span class="discount-badge">-{{ product.discount_percent }}%</span>
+        {% endif %}
+
+        <!-- ИЗБРАННОЕ + СРАВНЕНИЕ -->
+        <div class="card-actions-top">
+            {% if request.user.is_authenticated and request.user.role == 'client' %}
+            <span class="toggle-favorite-btn" data-id="{{ product.id }}"
+                data-url="{% url 'favorites:toggle' product.id %}">
+                {% if product.id in favorite_product_ids %}
+                <i class="fas fa-heart action-icon active"></i>
+                {% else %}
+                <i class="far fa-heart action-icon"></i>
+                {% endif %}
+            </span>
+            {% else %}
+            <a href="{% url 'accounts:login' %}">
+                <i class="far fa-heart action-icon"></i>
+            </a>
+            {% endif %}
+            <span class="compare-btn action-icon-wrap" data-id="{{ product.id }}">
+                <i class="fas fa-chart-bar action-icon"></i>
+            </span>
+        </div>
+
+        <!-- ФОТО -->
+        <a href="{% url 'products:detail' product.slug %}">
+            {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.title }}">
+            {% else %}
+            <div class="no-image">
+                <i class="fas fa-image"></i>
+                <span>Сүрөт жок</span>
+            </div>
+            {% endif %}
+        </a>
+    </div>
+
+    <!-- ИНФО БЛОК -->
+    <div class="product-details-block">
+
+        <a href="{% url 'products:detail' product.slug %}" class="product-link">
+            {{ product.title }}
+        </a>
+
+        <!-- ДОБАВЛЕННЫЙ БЛОК С КОЛИЧЕСТВОМ -->
+        <div class="stock-info">
+            <span>В наличии: {{ product.stock }} шт.</span>
+        </div>
+
+        <!-- ЦЕНА -->
+        <div class="price-block">
+            {% if product.stock > 0 %}
+            {% if product.old_price %}
+            <div class="old-price">{{ product.old_price }} сом</div>
+            {% endif %}
+            <div class="current-price">{{ product.price }} сом</div>
+            {% else %}
+            <div class="out-of-stock-text">Нет в наличии</div>
+            {% endif %}
+        </div>
+
+        <!-- КНОПКА КОРЗИНА С ДАТОЙ ДОСТАВКИ -->
+        {% if product.stock == 0 %}
+        <button class="btn-cart-full disabled" disabled>
+            <span class="btn-cart-full__icon"><i class="fas fa-shopping-cart"></i></span>
+            <span class="btn-cart-full__text">Нет в наличии</span>
+        </button>
+        {% else %}
+        <button class="btn-cart-full add-to-cart-btn" data-product-id="{{ product.id }}" type="button">
+            <span class="btn-cart-full__icon"><i class="fas fa-shopping-cart"></i></span>
+            <span class="btn-cart-full__text">
+                <span class="btn-cart-full__date">3-июнь</span>
+            </span>
+        </button>
+        {% endif %}
+
+    </div>
+</div>

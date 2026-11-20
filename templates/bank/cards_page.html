@@ -1,0 +1,679 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Мои карты — FINE{% endblock %}
+
+{% block extra_css %}
+<style>
+  :root {
+    --green: #22c55e;
+    --green-dark: #16a34a;
+    --border: #e2e8f0;
+    --bg: #f8fafc;
+    --card: #fff;
+    --text: #1e293b;
+    --muted: #64748b;
+  }
+
+  * { box-sizing: border-box; }
+
+  .cards-wrap {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 20px 16px 80px;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  }
+
+  /* ── ЗАГОЛОВОК ── */
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .page-title { font-size: 20px; font-weight: 800; color: var(--text); margin: 0; }
+
+  .btn-add-card {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background .2s;
+    font-family: inherit;
+  }
+
+  .btn-add-card:hover { background: var(--green-dark); }
+
+  /* ══════════════════════════════════════════
+     ПЛАСТИКОВЫЕ КАРТОЧКИ
+  ══════════════════════════════════════════ */
+
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  @media (max-width: 520px) {
+    .cards-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Основная карточка */
+  .bank-card {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1.586 / 1;   /* Стандартное соотношение пластиковой карты */
+    border-radius: 18px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: transform .25s, box-shadow .25s;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  .bank-card:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0,0,0,.25);
+  }
+
+  /* Выбранная карта */
+  .bank-card.selected {
+    outline: 3px solid #fff;
+    box-shadow: 0 0 0 5px var(--green), 0 20px 40px rgba(0,0,0,.2);
+    transform: translateY(-4px);
+  }
+
+  /* Декоративные круги — как на реальных картах */
+  .bank-card::before,
+  .bank-card::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    opacity: .15;
+  }
+
+  .bank-card::before {
+    width: 200px; height: 200px;
+    top: -60px; right: -60px;
+    background: #fff;
+  }
+
+  .bank-card::after {
+    width: 150px; height: 150px;
+    bottom: -50px; right: 30px;
+    background: #fff;
+  }
+
+  /* Шапка карты: логотип банка + тип карты */
+  .card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    position: relative;
+    z-index: 1;
+  }
+
+  .card-bank-logo {
+    height: 28px;
+    width: auto;
+    object-fit: contain;
+    filter: brightness(0) invert(1);  /* Делаем логотип белым */
+  }
+
+  .card-bank-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: rgba(255,255,255,.9);
+    letter-spacing: .3px;
+  }
+
+  /* Иконка типа карты (Visa/Mastercard/Элкарт) */
+  .card-type-badge {
+    font-size: 11px;
+    font-weight: 800;
+    color: rgba(255,255,255,.8);
+    background: rgba(255,255,255,.15);
+    padding: 3px 8px;
+    border-radius: 6px;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+  }
+
+  /* Чип */
+  .card-chip {
+    width: 36px;
+    height: 26px;
+    background: linear-gradient(135deg, #d4a843 0%, #f0c060 40%, #d4a843 100%);
+    border-radius: 5px;
+    margin: 8px 0;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 2px 4px rgba(0,0,0,.2);
+  }
+
+  .card-chip::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 20px; height: 18px;
+    border: 1.5px solid rgba(0,0,0,.15);
+    border-radius: 3px;
+  }
+
+  /* Нижняя часть карты */
+  .card-bottom {
+    position: relative;
+    z-index: 1;
+  }
+
+  .card-number {
+    font-size: 15px;
+    font-weight: 600;
+    color: rgba(255,255,255,.95);
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    font-family: 'Courier New', monospace;
+  }
+
+  .card-meta {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+  }
+
+  .card-meta-label {
+    font-size: 8px;
+    color: rgba(255,255,255,.5);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 2px;
+  }
+
+  .card-meta-value {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255,255,255,.9);
+    letter-spacing: .5px;
+  }
+
+  /* Галочка выбора */
+  .card-check {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 24px; height: 24px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.2);
+    border: 2px solid rgba(255,255,255,.4);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    color: transparent;
+    transition: all .2s;
+    z-index: 2;
+  }
+
+  .bank-card.selected .card-check {
+    background: #fff;
+    border-color: #fff;
+    color: var(--green);
+  }
+
+  /* ── ДОБАВИТЬ НОВУЮ КАРТУ ── */
+  .add-card-tile {
+    aspect-ratio: 1.586 / 1;
+    border-radius: 18px;
+    border: 2px dashed var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all .2s;
+    color: var(--muted);
+    text-decoration: none;
+    background: #fff;
+  }
+
+  .add-card-tile:hover {
+    border-color: var(--green);
+    color: var(--green);
+    background: #f0fdf4;
+  }
+
+  .add-card-tile-icon {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    transition: background .2s;
+  }
+
+  .add-card-tile:hover .add-card-tile-icon { background: #dcfce7; }
+  .add-card-tile-text { font-size: 13px; font-weight: 600; }
+
+  /* ── КНОПКИ УПРАВЛЕНИЯ КАРТОЙ ── */
+  .card-actions {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .card-action-btn {
+    flex: 1;
+    min-width: 120px;
+    padding: 11px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1.5px solid var(--border);
+    background: #fff;
+    color: var(--text);
+    cursor: pointer;
+    transition: all .2s;
+    font-family: inherit;
+    text-align: center;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+
+  .card-action-btn:hover { border-color: var(--green); color: var(--green-dark); background: #f0fdf4; }
+  .card-action-btn.danger:hover { border-color: #ef4444; color: #ef4444; background: #fef2f2; }
+
+  /* ── ФОРМА ДОБАВЛЕНИЯ КАРТЫ ── */
+  .add-card-form {
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 20px;
+    display: none;  /* скрыта по умолчанию */
+  }
+
+  .add-card-form.show { display: block; }
+
+  .form-title {
+    font-size: 15px;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0 0 16px;
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  @media (max-width: 400px) { .form-row { grid-template-columns: 1fr; } }
+
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+
+  .form-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+
+  .form-input {
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: 'Courier New', monospace;
+    color: var(--text);
+    outline: none;
+    transition: border-color .2s;
+    letter-spacing: 1px;
+  }
+
+  .form-input:focus { border-color: var(--green); }
+
+  .btn-save-card {
+    width: 100%;
+    padding: 13px;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 14px;
+    transition: background .2s;
+    font-family: inherit;
+  }
+
+  .btn-save-card:hover { background: var(--green-dark); }
+
+  .btn-cancel {
+    width: 100%;
+    padding: 11px;
+    background: #f8fafc;
+    color: var(--muted);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 8px;
+    font-family: inherit;
+    transition: all .2s;
+  }
+
+  .btn-cancel:hover { border-color: #cbd5e1; color: var(--text); }
+
+  /* ── АЛЕРТЫ ── */
+  .alert { padding: 12px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; margin-bottom: 14px; }
+  .alert-success { background: #dcfce7; color: #166534; }
+  .alert-error   { background: #fee2e2; color: #991b1b; }
+
+  /* ── ПУСТОЕ СОСТОЯНИЕ ── */
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--muted);
+  }
+
+  .empty-state-icon { font-size: 48px; margin-bottom: 12px; }
+  .empty-state p { font-size: 15px; margin: 0 0 16px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cards-wrap">
+
+  {% for msg in messages %}
+  <div class="alert alert-{% if msg.tags == 'error' %}error{% else %}success{% endif %}">{{ msg }}</div>
+  {% endfor %}
+
+  <div class="page-header">
+    <h2 class="page-title">💳 Мои карты</h2>
+    <button class="btn-add-card" onclick="toggleAddForm()">+ Добавить карту</button>
+  </div>
+
+  <!-- ── ФОРМА ДОБАВЛЕНИЯ КАРТЫ ── -->
+  <div class="add-card-form" id="addCardForm">
+    <h3 class="form-title">Новая карта</h3>
+    <form method="POST" action="{% url 'bank:card_add' %}">
+      {% csrf_token %}
+      <div class="form-group full" style="margin-bottom:12px;">
+        <label class="form-label">Номер карты</label>
+        <input type="text" name="card_number" class="form-input"
+               placeholder="0000 0000 0000 0000" maxlength="19"
+               oninput="formatCardNumber(this)" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Срок действия</label>
+          <input type="text" name="expiry" class="form-input"
+                 placeholder="MM/YY" maxlength="5"
+                 oninput="formatExpiry(this)" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Имя на карте</label>
+          <input type="text" name="cardholder_name" class="form-input"
+                 placeholder="IVAN IVANOV" style="font-family:inherit;letter-spacing:0;"
+                 oninput="this.value=this.value.toUpperCase()" required>
+        </div>
+      </div>
+      <div class="form-group" style="margin-bottom:0;">
+        <label class="form-label">Банк</label>
+        <select name="bank_id" class="form-input" style="font-family:inherit;letter-spacing:0;">
+          <option value="">Выберите банк</option>
+          {% for bank in banks %}
+          <option value="{{ bank.id }}">{{ bank.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <button type="submit" class="btn-save-card">Сохранить карту</button>
+      <button type="button" class="btn-cancel" onclick="toggleAddForm()">Отмена</button>
+    </form>
+  </div>
+
+  <!-- ── КАРТОЧКИ ── -->
+  {% if cards %}
+  <div class="cards-grid">
+    {% for card in cards %}
+    <div
+      class="bank-card {% if card.is_default %}selected{% endif %}"
+      id="card-{{ card.id }}"
+      style="background: linear-gradient(135deg, {{ card.bank.bg_color|default:'#1a1a2e' }} 0%, {{ card.bank.bg_color|default:'#1a1a2e' }}cc 100%);"
+      onclick="selectCard('{{ card.id }}')"
+    >
+      <!-- Галочка выбора -->
+      <div class="card-check">✓</div>
+
+      <!-- Шапка -->
+      <div class="card-top">
+        {% if card.bank and card.bank.logo %}
+          <img src="{{ card.bank.logo.url }}" class="card-bank-logo" alt="{{ card.bank.name }}">
+        {% else %}
+          <span class="card-bank-name">{{ card.bank.name|default:"Банк" }}</span>
+        {% endif %}
+        <span class="card-type-badge">{{ card.get_card_type_display }}</span>
+      </div>
+
+      <!-- Чип -->
+      <div class="card-chip"></div>
+
+      <!-- Номер и данные -->
+      <div class="card-bottom">
+        <div class="card-number">{{ card.masked_number }}</div>
+        <div class="card-meta">
+          <div>
+            <div class="card-meta-label">Действительна до</div>
+            <div class="card-meta-value">{{ card.expiry_display }}</div>
+          </div>
+          {% if card.is_default %}
+          <div style="background:rgba(255,255,255,.2);border-radius:6px;padding:3px 8px;">
+            <div style="font-size:10px;color:rgba(255,255,255,.9);font-weight:700;">Основная</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+
+    <!-- Плитка добавить карту -->
+    <div class="add-card-tile" onclick="toggleAddForm()">
+      <div class="add-card-tile-icon">+</div>
+      <span class="add-card-tile-text">Добавить карту</span>
+    </div>
+  </div>
+
+  <!-- Кнопки управления выбранной картой -->
+  <div class="card-actions" id="cardActions" style="display:none;">
+    <form method="POST" action="{% url 'bank:card_set_default' %}" style="flex:1;">
+      {% csrf_token %}
+      <input type="hidden" name="card_id" id="selectedCardId">
+      <button type="submit" class="card-action-btn" style="width:100%;">
+        ⭐ Сделать основной
+      </button>
+    </form>
+        <div style="flex:1;">
+        <button type="button" class="card-action-btn danger" style="width:100%;"
+                onclick="showDeleteModal()">
+            🗑 Удалить
+        </button>
+        </div>
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-state-icon">💳</div>
+    <p>У вас нет привязанных карт</p>
+    <button class="btn-add-card" onclick="toggleAddForm()" style="display:inline-flex;">
+      + Добавить первую карту
+    </button>
+  </div>
+  {% endif %}
+
+</div>
+
+<script>
+// ── Показать/скрыть форму добавления ──
+function toggleAddForm() {
+  const form = document.getElementById('addCardForm');
+  form.classList.toggle('show');
+  if (form.classList.contains('show')) {
+    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+// ── Выбор карты ──
+let selectedId = null;
+
+function selectCard(cardId) {
+  document.querySelectorAll('.bank-card').forEach(c => c.classList.remove('selected'));
+  const card = document.getElementById(`card-${cardId}`);
+  card.classList.add('selected');
+  selectedId = cardId;
+  document.getElementById('cardActions').style.display = 'flex';
+  document.getElementById('selectedCardId').value = cardId;
+  // Сохраняем для модалки
+  window.currentCardId = cardId;
+}
+
+// ── Форматирование номера карты: 4 группы по 4 ──
+function formatCardNumber(input) {
+  let val = input.value.replace(/\D/g, '').slice(0, 16);
+  input.value = val.replace(/(.{4})/g, '$1 ').trim();
+}
+
+// ── Форматирование срока MM/YY ──
+function formatExpiry(input) {
+  let val = input.value.replace(/\D/g, '').slice(0, 4);
+  if (val.length >= 3) {
+    val = val.slice(0,2) + '/' + val.slice(2);
+  }
+  input.value = val;
+}
+</script>
+
+<!-- МОДАЛЬНОЕ ОКНО УДАЛЕНИЯ -->
+<div id="deleteModal" style="
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.5);
+  z-index:9999;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+">
+  <div style="
+    background:#fff;
+    border-radius:20px;
+    padding:28px 24px;
+    max-width:360px;
+    width:100%;
+    text-align:center;
+    animation: popIn .2s ease;
+  ">
+    <div style="font-size:48px;margin-bottom:12px;">🗑️</div>
+    <div style="font-size:18px;font-weight:800;color:#1e293b;margin-bottom:8px;">
+      Удалить карту?
+    </div>
+    <div style="font-size:14px;color:#64748b;margin-bottom:24px;" id="modalCardNumber">
+      Карта будет удалена безвозвратно
+    </div>
+
+    <form method="POST" action="{% url 'bank:card_delete' %}" id="deleteForm">
+      {% csrf_token %}
+      <input type="hidden" name="card_id" id="modalCardId">
+      <button type="submit" style="
+        width:100%;
+        padding:13px;
+        background:#ef4444;
+        color:#fff;
+        border:none;
+        border-radius:10px;
+        font-size:14px;
+        font-weight:700;
+        cursor:pointer;
+        font-family:inherit;
+        margin-bottom:10px;
+        transition:background .2s;
+      " onmouseover="this.style.background='#dc2626'"
+         onmouseout="this.style.background='#ef4444'">
+        Да, удалить
+      </button>
+    </form>
+
+    <button onclick="hideDeleteModal()" style="
+      width:100%;
+      padding:13px;
+      background:#f8fafc;
+      color:#64748b;
+      border:1.5px solid #e2e8f0;
+      border-radius:10px;
+      font-size:14px;
+      font-weight:600;
+      cursor:pointer;
+      font-family:inherit;
+      transition:all .2s;
+    " onmouseover="this.style.background='#f1f5f9'"
+       onmouseout="this.style.background='#f8fafc'">
+      Отмена
+    </button>
+  </div>
+</div>
+
+<style>
+@keyframes popIn {
+  from { transform: scale(.9); opacity: 0; }
+  to   { transform: scale(1);  opacity: 1; }
+}
+</style>
+
+<script>
+function showDeleteModal() {
+  const cardId = window.currentCardId;
+  if (!cardId) {
+    alert('Сначала выберите карту');
+    return;
+  }
+  const cardEl = document.getElementById(`card-${cardId}`);
+  const cardNumber = cardEl
+    ? cardEl.querySelector('.card-number').textContent.trim()
+    : '';
+  document.getElementById('modalCardId').value = cardId;
+  document.getElementById('modalCardNumber').textContent =
+    cardNumber ? `Карта ${cardNumber} будет удалена` : 'Карта будет удалена безвозвратно';
+  document.getElementById('deleteModal').style.display = 'flex';
+}
+
+function hideDeleteModal() {
+  document.getElementById('deleteModal').style.display = 'none';
+}
+
+// Закрытие по клику на фон
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+  if (e.target === this) hideDeleteModal();
+});
+</script>
+{% endblock %}

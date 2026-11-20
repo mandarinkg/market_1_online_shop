@@ -1,0 +1,1028 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+<style>
+  :root {
+    --green: #78b933;
+    --green-dark: #5a9020;
+    --green-light: #f0fdf4;
+    --star: #f59e0b;
+    --text: #1e293b;
+    --muted: #64748b;
+    --border: #e2e8f0;
+    --card: #ffffff;
+    --bg: #f8fafc;
+    --radius: 16px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body { background: var(--bg); font-family: 'Inter', 'Segoe UI', system-ui, sans-serif; }
+
+  .product-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px 16px 80px;
+  }
+
+  /* ══════════════════════════════
+     ГАЛЕРЕЯ — SWIPER
+  ══════════════════════════════ */
+  .gallery-wrap {
+    background: var(--card);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 16px;
+    border: 1px solid var(--border);
+    position: relative;
+  }
+
+  .swiper {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    max-height: 420px;
+  }
+
+  .swiper-slide {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+  }
+
+  .swiper-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 12px;
+  }
+
+  .swiper-no-img {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: var(--muted);
+    font-size: 14px;
+    height: 100%;
+  }
+
+  .swiper-no-img svg { opacity: .3; }
+
+  /* Точки пагинации */
+  .swiper-pagination-bullet {
+    background: #bdc3c7 !important;
+    opacity: 1 !important;
+    width: 8px !important;
+    height: 8px !important;
+    transition: all .25s !important;
+  }
+
+  .swiper-pagination-bullet-active {
+    background: #2ecc71 !important;
+    width: 24px !important;
+    border-radius: 4px !important;
+  }
+
+  /* Стрелки */
+  .swiper-button-next,
+  .swiper-button-prev {
+    width: 36px !important;
+    height: 36px !important;
+    background: rgba(255,255,255,.9);
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0,0,0,.1);
+  }
+
+  .swiper-button-next::after,
+  .swiper-button-prev::after {
+    font-size: 13px !important;
+    color: var(--text);
+    font-weight: 800;
+  }
+
+  /* Миниатюры */
+  .gallery-thumbs {
+    display: flex;
+    gap: 8px;
+    padding: 10px 12px;
+    overflow-x: auto;
+    border-top: 1px solid var(--border);
+    scrollbar-width: none;
+  }
+
+  .gallery-thumbs::-webkit-scrollbar { display: none; }
+
+  .thumb-item {
+    width: 60px;
+    height: 60px;
+    flex-shrink: 0;
+    border-radius: 10px;
+    border: 2px solid var(--border);
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color .2s;
+  }
+
+  .thumb-item.active { border-color: var(--green); }
+  .thumb-item img { width: 100%; height: 100%; object-fit: contain; padding: 4px; }
+
+  /* ══════════════════════════════
+     КАРТОЧКА ТОВАРА
+  ══════════════════════════════ */
+  .buy-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .product-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0 0 8px;
+    line-height: 1.3;
+  }
+
+  /* Мини-рейтинг под заголовком */
+  .product-rating-mini {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 14px;
+    text-decoration: none;
+  }
+
+  .stars-mini { display: flex; gap: 2px; }
+
+  .star-mini {
+    font-size: 14px;
+    color: #d1d5db;
+    transition: color .15s;
+  }
+
+  .star-mini.filled { color: var(--star); }
+
+  .rating-num {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .reviews-link {
+    font-size: 13px;
+    color: var(--green);
+    text-decoration: none;
+    font-weight: 500;
+  }
+
+  .reviews-link:hover { text-decoration: underline; }
+
+  /* Цена */
+  .price-block { margin-bottom: 16px; }
+
+  .old-price-line {
+    font-size: 14px;
+    color: var(--muted);
+    text-decoration: line-through;
+    margin-bottom: 2px;
+  }
+
+  .price-main {
+    font-size: 30px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .discount-tag {
+    display: inline-block;
+    background: #fee2e2;
+    color: #dc2626;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+    margin-left: 8px;
+    vertical-align: middle;
+  }
+
+  .stock-line {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .stock-line.low { color: #ef4444; }
+
+  /* Кнопки */
+  .btn-row { display: flex; gap: 10px; margin-bottom: 16px; }
+
+  .btn-buy {
+    flex: 1;
+    padding: 14px;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background .2s;
+    font-family: inherit;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-buy:hover { background: var(--green-dark); }
+  .btn-buy:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+  .btn-cart {
+    flex: 1;
+    padding: 14px;
+    background: var(--green-light);
+    color: var(--green-dark);
+    border: 1.5px solid var(--green);
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all .2s;
+    font-family: inherit;
+  }
+
+  .btn-cart:hover { background: #dcfce7; }
+
+  /* Описание */
+  .section-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-size: 16px;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0 0 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .description-text {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.7;
+    margin: 0;
+  }
+
+  /* Характеристики */
+  .attr-table { width: 100%; border-collapse: collapse; }
+
+  .attr-table tr:nth-child(even) td { background: var(--bg); }
+
+  .attr-table td {
+    padding: 9px 12px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .attr-table td:first-child { color: var(--muted); width: 45%; }
+  .attr-table td:last-child  { color: var(--text); font-weight: 600; }
+
+  /* Кнопка редактирования */
+  .edit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg);
+    padding: 8px 16px;
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+    transition: all .2s;
+  }
+
+  .edit-btn:hover { border-color: var(--green); color: var(--green); }
+
+  /* ══════════════════════════════
+     ОТЗЫВЫ
+  ══════════════════════════════ */
+
+  /* Шапка отзывов */
+  .reviews-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .avg-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 80px;
+  }
+
+  .avg-num {
+    font-size: 48px;
+    font-weight: 800;
+    color: var(--text);
+    line-height: 1;
+  }
+
+  .avg-stars { display: flex; gap: 3px; margin: 6px 0; }
+
+  .avg-star { font-size: 18px; color: #d1d5db; }
+  .avg-star.filled { color: var(--star); }
+  .avg-star.half { color: var(--star); opacity: .5; }
+
+  .avg-count { font-size: 12px; color: var(--muted); }
+
+  /* Полосы рейтинга */
+  .rating-bars { flex: 1; min-width: 200px; }
+
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    cursor: pointer;
+    text-decoration: none;
+  }
+
+  .bar-label {
+    font-size: 12px;
+    color: var(--muted);
+    width: 50px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .bar-label .star-icon { color: var(--star); font-size: 11px; }
+
+  .bar-track {
+    flex: 1;
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .bar-fill {
+    height: 100%;
+    background: var(--star);
+    border-radius: 4px;
+    transition: width .5s ease;
+  }
+
+  .bar-count { font-size: 12px; color: var(--muted); width: 28px; text-align: right; }
+
+  /* Фильтр */
+  .reviews-filter {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .filter-chip {
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    color: var(--muted);
+    text-decoration: none;
+    transition: all .15s;
+  }
+
+  .filter-chip:hover { border-color: var(--green); color: var(--green); }
+  .filter-chip.active { background: var(--green); color: #fff; border-color: var(--green); }
+
+  /* Форма отзыва */
+  .review-form-wrap {
+    background: var(--bg);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 20px;
+    border: 1.5px solid var(--border);
+  }
+
+  .form-title { font-size: 15px; font-weight: 700; color: var(--text); margin: 0 0 14px; }
+
+  /* Интерактивные звёзды */
+  .star-picker {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+
+  .star-pick {
+    font-size: 32px;
+    cursor: pointer;
+    color: #d1d5db;
+    transition: color .15s, transform .15s;
+    line-height: 1;
+  }
+
+  .star-pick:hover,
+  .star-pick.active { color: var(--star); transform: scale(1.15); }
+
+  .review-textarea {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--text);
+    resize: vertical;
+    outline: none;
+    transition: border-color .2s;
+    min-height: 100px;
+  }
+
+  .review-textarea:focus { border-color: var(--green); }
+
+  .btn-submit-review {
+    margin-top: 12px;
+    padding: 11px 24px;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background .2s;
+  }
+
+  .btn-submit-review:hover { background: var(--green-dark); }
+
+  /* Карточка отзыва */
+  .review-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 12px;
+    transition: box-shadow .2s;
+  }
+
+  .review-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.06); }
+
+  .review-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+
+  .reviewer-info { display: flex; align-items: center; gap: 10px; }
+
+  .reviewer-avatar {
+    width: 40px; height: 40px;
+    border-radius: 50%;
+    background: var(--green);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 800; color: #fff;
+    flex-shrink: 0;
+  }
+
+  .reviewer-name { font-size: 14px; font-weight: 700; color: var(--text); }
+  .reviewer-date { font-size: 12px; color: var(--muted); margin-top: 1px; }
+
+  .review-stars { display: flex; gap: 2px; }
+  .review-star { font-size: 15px; color: #d1d5db; }
+  .review-star.filled { color: var(--star); }
+
+  /* Бейджи */
+  .badges { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
+
+  .badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+  }
+
+  .badge-verified { background: #dcfce7; color: #16a34a; }
+
+  .review-text {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.6;
+    margin: 0 0 12px;
+  }
+
+  /* Ответ продавца */
+  .seller-reply-block {
+    background: var(--bg);
+    border-left: 3px solid var(--green);
+    border-radius: 0 10px 10px 0;
+    padding: 12px 14px;
+    margin-top: 10px;
+  }
+
+  .seller-reply-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--green-dark);
+    margin-bottom: 5px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .seller-reply-text { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  /* Форма ответа продавца */
+  .reply-form { margin-top: 10px; }
+
+  .reply-form textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    resize: vertical;
+    outline: none;
+    transition: border-color .2s;
+  }
+
+  .reply-form textarea:focus { border-color: var(--green); }
+
+  .btn-reply {
+    margin-top: 8px;
+    padding: 8px 18px;
+    background: var(--green-light);
+    color: var(--green-dark);
+    border: 1.5px solid var(--green);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all .2s;
+  }
+
+  .btn-reply:hover { background: #dcfce7; }
+
+  /* Кнопка удалить */
+  .btn-delete-review {
+    font-size: 12px;
+    color: var(--muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all .2s;
+    font-family: inherit;
+  }
+
+  .btn-delete-review:hover { background: #fee2e2; color: #ef4444; }
+
+  /* Пагинация */
+  .pagination {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+    margin-top: 20px;
+    flex-wrap: wrap;
+  }
+
+  .page-btn {
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1.5px solid var(--border);
+    background: var(--card);
+    color: var(--text);
+    text-decoration: none;
+    transition: all .15s;
+  }
+
+  .page-btn:hover { border-color: var(--green); color: var(--green); }
+  .page-btn.current { background: var(--green); color: #fff; border-color: var(--green); }
+  .page-btn.disabled { opacity: .4; pointer-events: none; }
+
+  /* Пустое состояние */
+  .empty-reviews {
+    text-align: center;
+    padding: 32px;
+    color: var(--muted);
+  }
+
+  .empty-reviews-icon { font-size: 40px; margin-bottom: 10px; }
+
+  /* Адаптив */
+  @media (max-width: 600px) {
+    .product-title { font-size: 18px; }
+    .price-main    { font-size: 24px; }
+    .avg-num       { font-size: 36px; }
+    .reviews-header { gap: 16px; }
+    .btn-row { flex-direction: column; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="product-page">
+
+  {% if request.user == product.seller %}
+  <a href="{% url 'products:edit' product.slug %}" class="edit-btn">
+    ⚙️ Редактировать товар
+  </a>
+  {% endif %}
+
+  <!-- ══════════════════════════════
+       ГАЛЕРЕЯ SWIPER
+  ══════════════════════════════ -->
+  <div class="gallery-wrap">
+    {% with images=product.images.all %}
+
+    {% if images %}
+    <div class="swiper" id="productSwiper">
+      <div class="swiper-wrapper">
+        {% for img in images %}
+        <div class="swiper-slide">
+          <img src="{{ img.image.url }}" alt="{{ product.title }}">
+        </div>
+        {% endfor %}
+      </div>
+      {% if images|length > 1 %}
+      <div class="swiper-pagination"></div>
+      <div class="swiper-button-prev"></div>
+      <div class="swiper-button-next"></div>
+      {% endif %}
+    </div>
+    {% if images|length > 1 %}
+    <div class="gallery-thumbs" id="thumbs">
+      {% for img in images %}
+      <div class="thumb-item {% if forloop.first %}active{% endif %}"
+           data-index="{{ forloop.counter0 }}">
+        <img src="{{ img.image.url }}" alt="">
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    {% elif product.image %}
+    <!-- Одно старое фото -->
+    <div class="swiper" id="productSwiper">
+      <div class="swiper-wrapper">
+        <div class="swiper-slide">
+          <img src="{{ product.image.url }}" alt="{{ product.title }}">
+        </div>
+      </div>
+    </div>
+
+    {% else %}
+    <div class="swiper" id="productSwiper">
+      <div class="swiper-wrapper">
+        <div class="swiper-slide">
+          <div class="swiper-no-img">
+            <svg width="64" height="64" fill="none" viewBox="0 0 24 24">
+              <rect width="20" height="16" x="2" y="4" rx="2" stroke="#94a3b8" stroke-width="1.5"/>
+              <circle cx="8.5" cy="9.5" r="1.5" stroke="#94a3b8" stroke-width="1.5"/>
+              <path stroke="#94a3b8" stroke-width="1.5" d="m3 17 5-5 3 3 3-4 5 6"/>
+            </svg>
+            <span>Фото нет</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {% endwith %}
+  </div>
+
+  <!-- ══════════════════════════════
+       ИНФО + ПОКУПКА
+  ══════════════════════════════ -->
+  <div class="buy-card">
+    <h1 class="product-title">{{ product.title }}</h1>
+
+    <!-- Мини-рейтинг -->
+    <a href="#reviews-section" class="product-rating-mini">
+    <div class="stars-mini">
+        {% for i in "12345" %}
+        <span class="star-mini {% if forloop.counter <= avg_rating %}filled{% endif %}">
+            ★
+        </span>
+        {% endfor %}
+    </div>
+
+    <span class="rating-num">{{ avg_rating }}</span>
+    <span class="reviews-link">({{ total_reviews }} отзывов)</span>
+    </a>
+
+    <!-- Цена -->
+    <div class="price-block">
+      {% if product.old_price %}
+      <div class="old-price-line">{{ product.old_price }} сом</div>
+      {% endif %}
+      <div>
+        <span class="price-main">{{ product.price }} сом</span>
+        {% if product.discount_percent > 0 %}
+        <span class="discount-tag">-{{ product.discount_percent }}%</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Остаток -->
+    <div class="stock-line {% if product.stock <= 5 and product.stock > 0 %}low{% endif %}">
+      {% if product.stock > 0 %}
+        {% if product.stock <= 5 %}⚠️ Осталось {{ product.stock }} шт.
+        {% else %}✓ В наличии: {{ product.stock }} шт.{% endif %}
+      {% else %}
+        Нет в наличии
+      {% endif %}
+    </div>
+
+    <!-- Кнопки -->
+    {% if product.stock > 0 %}
+    <div class="btn-row">
+      <form method="post" action="{% url 'orders:create_from_product' product.id %}" style="flex:1;">
+        {% csrf_token %}
+        <a href="{% url 'products:buy_now' product.id %}" style="flex:1;text-decoration:none;">
+            <button type="button" class="btn-buy" style="width:100%;">
+                🛍️ Купить сейчас
+            </button>
+        </a>
+      </form>
+      <button class="btn-cart add-to-cart-btn"
+              data-product-id="{{ product.id }}" type="button">
+        🛒 В корзину
+      </button>
+    </div>
+    {% else %}
+    <button class="btn-buy" disabled>Нет в наличии</button>
+    {% endif %}
+  </div>
+
+  <!-- Описание -->
+  <div class="section-card">
+    <h3 class="section-title">📋 Описание</h3>
+    <p class="description-text">{{ product.description }}</p>
+  </div>
+
+  <!-- Характеристики -->
+  {% if product.attributes.exists %}
+  <div class="section-card">
+    <h3 class="section-title">📐 Характеристики</h3>
+    <table class="attr-table">
+      {% for attr in product.attributes.all %}
+      <tr>
+        <td>{{ attr.name }}</td>
+        <td>{{ attr.value }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </div>
+  {% endif %}
+
+  <!-- ══════════════════════════════
+       ОТЗЫВЫ
+  ══════════════════════════════ -->
+  <div class="section-card" id="reviews-section">
+    <h3 class="section-title">⭐ Отзывы покупателей</h3>
+
+    <!-- Шапка с рейтингом -->
+    {% if total_reviews > 0 %}
+    <div class="reviews-header">
+      <div class="avg-block">
+        <div class="avg-num">{{ avg_rating }}</div>
+        <div class="avg-stars">
+          {% for i in "12345" %}
+          <span class="avg-star {% if forloop.counter <= avg_rating %}filled{% endif %}">★</span>
+          {% endfor %}
+        </div>
+        <div class="avg-count">{{ total_reviews }} отзывов</div>
+      </div>
+
+      <div class="rating-bars">
+        {% for star, data in rating_stats.items %}
+        <a href="?stars={{ star }}#reviews-section" class="bar-row">
+          <div class="bar-label">{{ star }} <span class="star-icon">★</span></div>
+          <div class="bar-track">
+            <div class="bar-fill" style="width: {{ data.percent }}%"></div>
+          </div>
+          <div class="bar-count">{{ data.count }}</div>
+        </a>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Фильтр -->
+    <div class="reviews-filter">
+      <a href="#reviews-section" class="filter-chip {% if not star_filter %}active{% endif %}">Все</a>
+      {% for star in "54321" %}
+      <a href="?stars={{ star }}#reviews-section"
+         class="filter-chip {% if star_filter == star %}active{% endif %}">
+        {{ star }}★
+      </a>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Форма нового отзыва -->
+    {% if can_review %}
+    <div class="review-form-wrap">
+      <h4 class="form-title">Оставить отзыв</h4>
+      <form method="POST" action="{% url 'reviews:create' product.slug %}">
+        {% csrf_token %}
+        <input type="hidden" name="rating" id="ratingInput" value="0">
+        <div class="star-picker" id="starPicker">
+          {% for i in "12345" %}
+          <span class="star-pick" data-val="{{ forloop.counter }}">★</span>
+          {% endfor %}
+        </div>
+        {{ review_form.text }}
+        <button type="submit" class="btn-submit-review">Отправить отзыв</button>
+      </form>
+    </div>
+    {% elif user_review %}
+    <div style="background:#f0fdf4;border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:14px;color:#16a34a;font-weight:600;">
+      ✓ Вы уже оставили отзыв на этот товар
+    </div>
+    {% elif not request.user.is_authenticated %}
+    <div style="background:var(--bg);border-radius:12px;padding:14px 16px;margin-bottom:16px;font-size:14px;color:var(--muted);text-align:center;">
+      <a href="{% url 'accounts:login' %}" style="color:var(--green);font-weight:700;">Войдите</a>, чтобы оставить отзыв
+    </div>
+    {% endif %}
+
+    <!-- Список отзывов -->
+    {% if page_obj %}
+      {% for review in page_obj %}
+      <div class="review-card">
+        <div class="review-top">
+          <div class="reviewer-info">
+            <div class="reviewer-avatar">{{ review.user.username|first|upper }}</div>
+            <div>
+              <div class="reviewer-name">{{ review.user.get_full_name|default:review.user.username }}</div>
+              <div class="reviewer-date">{{ review.created_at|date:"d.m.Y" }}</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="review-stars">
+              {% for i in "12345" %}
+              <span class="review-star {% if forloop.counter <= review.rating %}filled{% endif %}">★</span>
+              {% endfor %}
+            </div>
+            {% if request.user == review.user %}
+            <form method="POST" action="{% url 'reviews:delete' review.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="btn-delete-review">✕</button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Бейджи -->
+        <div class="badges">
+          {% if review.verified_purchase %}
+          <span class="badge badge-verified">✓ Подтверждённая покупка</span>
+          {% endif %}
+        </div>
+
+        <!-- Текст -->
+        {% if review.text %}
+        <p class="review-text" style="margin-top:10px;">{{ review.text }}</p>
+        {% endif %}
+
+        <!-- Ответ продавца -->
+        {% if review.seller_reply %}
+        <div class="seller-reply-block">
+          <div class="seller-reply-label">🏪 Ответ продавца</div>
+          <div class="seller-reply-text">{{ review.seller_reply }}</div>
+        </div>
+        {% elif request.user == product.seller %}
+        <div class="reply-form">
+          <form method="POST" action="{% url 'reviews:seller_reply' review.pk %}">
+            {% csrf_token %}
+            <textarea name="seller_reply" rows="2" placeholder="Ответить на отзыв..."></textarea>
+            <button type="submit" class="btn-reply">Ответить</button>
+          </form>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+
+      <!-- Пагинация -->
+      {% if page_obj.has_other_pages %}
+      <div class="pagination">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if star_filter %}&stars={{ star_filter }}{% endif %}#reviews-section"
+           class="page-btn">← Пред</a>
+        {% endif %}
+        {% for num in page_obj.paginator.page_range %}
+        <a href="?page={{ num }}{% if star_filter %}&stars={{ star_filter }}{% endif %}#reviews-section"
+           class="page-btn {% if num == page_obj.number %}current{% endif %}">{{ num }}</a>
+        {% endfor %}
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if star_filter %}&stars={{ star_filter }}{% endif %}#reviews-section"
+           class="page-btn">След →</a>
+        {% endif %}
+      </div>
+      {% endif %}
+
+    {% else %}
+    <div class="empty-reviews">
+      <div class="empty-reviews-icon">💬</div>
+      <p style="margin:0;font-size:15px;">Отзывов пока нет. Будьте первым!</p>
+    </div>
+    {% endif %}
+
+  </div>
+
+</div>
+
+<!-- Swiper JS -->
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script>
+// ── SWIPER ──
+const hasMultiple = document.querySelectorAll('#productSwiper .swiper-slide').length > 1;
+
+const swiper = new Swiper('#productSwiper', {
+  loop: hasMultiple,
+  pagination: hasMultiple ? {
+    el: '.swiper-pagination',
+    clickable: true,
+  } : false,
+  navigation: hasMultiple ? {
+    nextEl: '.swiper-button-next',
+    prevEl: '.swiper-button-prev',
+  } : false,
+  on: {
+    slideChange: function() {
+      // Обновляем миниатюры
+      document.querySelectorAll('.thumb-item').forEach((t, i) => {
+        t.classList.toggle('active', i === this.realIndex);
+      });
+    }
+  }
+});
+
+// Клик по миниатюре
+document.querySelectorAll('.thumb-item').forEach(thumb => {
+  thumb.addEventListener('click', () => {
+    const idx = parseInt(thumb.dataset.index);
+    swiper.slideToLoop(idx);
+  });
+});
+
+// ── ЗВЁЗДЫ В ФОРМЕ ──
+const stars    = document.querySelectorAll('.star-pick');
+const input    = document.getElementById('ratingInput');
+
+stars.forEach(star => {
+  star.addEventListener('mouseover', () => {
+    const val = parseInt(star.dataset.val);
+    stars.forEach((s, i) => s.classList.toggle('active', i < val));
+  });
+
+  star.addEventListener('mouseleave', () => {
+    const current = parseInt(input?.value || 0);
+    stars.forEach((s, i) => s.classList.toggle('active', i < current));
+  });
+
+  star.addEventListener('click', () => {
+    const val = parseInt(star.dataset.val);
+    if (input) input.value = val;
+    stars.forEach((s, i) => s.classList.toggle('active', i < val));
+  });
+});
+
+document.getElementById('starPicker')?.addEventListener('mouseleave', () => {
+  const current = parseInt(input?.value || 0);
+  stars.forEach((s, i) => s.classList.toggle('active', i < current));
+});
+</script>
+{% endblock %}

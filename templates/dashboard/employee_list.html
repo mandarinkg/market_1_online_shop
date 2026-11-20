@@ -1,0 +1,355 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block title %}Сотрудники — FINE{% endblock %}
+{% block header_title %}Сотрудники{% endblock %}
+
+{% block extra_css %}
+<style>
+  * { box-sizing: border-box; }
+
+  .page-wrap { max-width: 900px; }
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .page-title { font-size: 20px; font-weight: 800; color: #1a1a2e; margin: 0; }
+
+  .total-badge {
+    background: #f39c12;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 20px;
+  }
+
+  /* ── КАРТОЧКА СОТРУДНИКА ── */
+  .emp-card {
+    background: #fff;
+    border: 1.5px solid #edf2f7;
+    border-radius: 16px;
+    margin-bottom: 12px;
+    overflow: hidden;
+    transition: box-shadow .2s;
+  }
+
+  .emp-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,.08); }
+
+  /* Шапка сотрудника */
+  .emp-card-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .emp-card-header:hover { background: #f7f8fc; }
+
+  .emp-avatar {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: #f39c12;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 800; color: #fff;
+    flex-shrink: 0;
+  }
+
+  .emp-info { flex: 1; min-width: 0; }
+  .emp-name { font-size: 15px; font-weight: 700; color: #1a1a2e; margin: 0 0 3px; }
+  .emp-sub { font-size: 12px; color: #636e72; }
+
+  .emp-counters {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .counter-pill {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .counter-pill.processing { background: #fef3c7; color: #92400e; }
+  .counter-pill.delivering { background: #dbeafe; color: #1d4ed8; }
+  .counter-pill.idle { background: #f1f5f9; color: #64748b; }
+
+  .emp-chevron {
+    color: #94a3b8;
+    font-size: 18px;
+    transition: transform .25s;
+    flex-shrink: 0;
+  }
+
+  .emp-card.open .emp-chevron { transform: rotate(180deg); color: #f39c12; }
+
+  /* Тело — список заказов */
+  .emp-card-body { max-height: 0; overflow: hidden; transition: max-height .35s ease; }
+  .emp-card.open .emp-card-body { max-height: 5000px; }
+
+  .emp-card-body-inner {
+    border-top: 1px solid #edf2f7;
+    padding: 16px 20px;
+  }
+
+  .orders-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: #94a3b8;
+    margin-bottom: 12px;
+  }
+
+  /* Карточка заказа внутри сотрудника */
+  .order-block {
+    border: 1px solid #edf2f7;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+
+  .order-block-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #f7f8fc;
+    flex-wrap: wrap;
+  }
+
+  .order-id {
+    font-size: 13px;
+    font-weight: 800;
+    color: #1a1a2e;
+  }
+
+  .status-pill {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+
+  .status-pill.processing { background: #fef3c7; color: #92400e; }
+  .status-pill.delivering { background: #dbeafe; color: #1d4ed8; }
+
+  .client-info {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    flex: 1;
+  }
+
+  .info-chip {
+    font-size: 12px;
+    color: #636e72;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .info-chip strong { color: #1a1a2e; }
+
+  /* Товары внутри заказа */
+  .order-items { padding: 10px 16px 14px; }
+
+  .item-line {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .item-line:last-child { border-bottom: none; }
+
+  .item-img {
+    width: 36px; height: 36px;
+    object-fit: contain;
+    border-radius: 6px;
+    border: 1px solid #edf2f7;
+    background: #fff;
+    flex-shrink: 0;
+  }
+
+  .item-no-img {
+    width: 36px; height: 36px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .item-name { font-size: 13px; font-weight: 600; color: #1a1a2e; flex: 1; min-width: 0; }
+  .item-qty { font-size: 12px; color: #64748b; white-space: nowrap; }
+
+  .shop-tag {
+    background: #e0f2fe;
+    color: #0369a1;
+    border-radius: 5px;
+    padding: 1px 7px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .collected-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .collected-dot.yes { background: #22c55e; }
+  .collected-dot.no  { background: #e2e8f0; }
+
+  /* Пустое */
+  .idle-msg {
+    text-align: center;
+    padding: 24px;
+    color: #94a3b8;
+    font-size: 14px;
+  }
+
+  .empty-page {
+    text-align: center;
+    padding: 60px 20px;
+    color: #94a3b8;
+    background: #fff;
+    border-radius: 16px;
+    border: 1.5px solid #edf2f7;
+  }
+
+  /* Мобайл */
+  @media (max-width: 600px) {
+    .emp-card-header { padding: 14px 14px; gap: 10px; }
+    .emp-counters { flex-direction: column; gap: 4px; }
+    .counter-pill { font-size: 11px; padding: 3px 8px; }
+    .emp-card-body-inner { padding: 12px 14px; }
+    .order-block-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+
+  <div class="page-header">
+    <h2 class="page-title">👔 Сотрудники</h2>
+    <span class="total-badge">{{ employees|length }} чел</span>
+  </div>
+
+  {% if employees %}
+    {% for emp in employees %}
+    <div class="emp-card" id="emp-{{ emp.id }}">
+
+      <!-- Шапка сотрудника -->
+      <div class="emp-card-header" onclick="toggleEmp({{ emp.id }})">
+        <div class="emp-avatar">{{ emp.username|first|upper }}</div>
+        <div class="emp-info">
+          <div class="emp-name">{{ emp.get_full_name|default:emp.username }}</div>
+          <div class="emp-sub">{{ emp.email }}</div>
+        </div>
+
+        <div class="emp-counters">
+          {% if emp.processing_count > 0 %}
+          <div class="counter-pill processing">⚙️ {{ emp.processing_count }} сборка</div>
+          {% endif %}
+          {% if emp.delivering_count > 0 %}
+          <div class="counter-pill delivering">🚚 {{ emp.delivering_count }} готово</div>
+          {% endif %}
+          {% if emp.processing_count == 0 and emp.delivering_count == 0 %}
+          <div class="counter-pill idle">😴 Свободен</div>
+          {% endif %}
+        </div>
+
+        <div class="emp-chevron">▾</div>
+      </div>
+
+      <!-- Тело — активные заказы -->
+      <div class="emp-card-body">
+        <div class="emp-card-body-inner">
+
+          {% if emp.active_orders %}
+            <div class="orders-label">Активные заказы ({{ emp.active_orders|length }})</div>
+
+            {% for order in emp.active_orders %}
+            <div class="order-block">
+
+              <!-- Инфо заказа + клиента -->
+              <div class="order-block-header">
+                <span class="order-id">#{{ order.id }}</span>
+                <span class="status-pill {{ order.status }}">
+                  {% if order.status == 'processing' %}⚙️ Сборка
+                  {% elif order.status == 'delivering' %}🚚 Готов к выдаче
+                  {% endif %}
+                </span>
+                <div class="client-info">
+                  <span class="info-chip">👤 <strong>{{ order.full_name|default:order.client.get_full_name|default:order.client.username }}</strong></span>
+                  <span class="info-chip">📞 <strong>{{ order.phone|default:order.client.phone_number|default:"—" }}</strong></span>
+                  <span class="info-chip">🌐 @{{ order.client.username }}</span>
+                  <span class="info-chip">📍 {{ order.address|default:"—"|truncatechars:30 }}</span>
+                </div>
+              </div>
+
+              <!-- Товары -->
+              <div class="order-items">
+                {% for item in order.items.all %}
+                <div class="item-line">
+                  <div class="collected-dot {% if item.is_collected %}yes{% else %}no{% endif %}"></div>
+                  {% if item.product and item.product.image %}
+                    <img src="{{ item.product.image.url }}" class="item-img" alt="">
+                  {% else %}
+                    <div class="item-no-img">📦</div>
+                  {% endif %}
+                  <div class="item-name">{{ item.product_name }}</div>
+                  <div class="item-qty">{{ item.quantity }} шт</div>
+                  {% if item.product.shop %}
+                    <span class="shop-tag">🏪 {{ item.product.shop.name }}</span>
+                  {% endif %}
+                </div>
+                {% endfor %}
+              </div>
+
+            </div>
+            {% endfor %}
+
+          {% else %}
+            <div class="idle-msg">😴 Сейчас нет активных заказов</div>
+          {% endif %}
+
+        </div>
+      </div>
+
+    </div>
+    {% endfor %}
+
+  {% else %}
+    <div class="empty-page">
+      <div style="font-size:40px;margin-bottom:12px;">👔</div>
+      <p style="margin:0;font-size:16px;">Сотрудников нет</p>
+    </div>
+  {% endif %}
+
+</div>
+
+<script>
+function toggleEmp(id) {
+  const card = document.getElementById(`emp-${id}`);
+  const isOpen = card.classList.contains('open');
+  document.querySelectorAll('.emp-card.open').forEach(c => c.classList.remove('open'));
+  if (!isOpen) card.classList.add('open');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,352 @@
+{% extends 'dashboard/base_dashboard.html' %}
+{% block title %}Мой баланс — FINE{% endblock %}
+{% block header_title %}Баланс{% endblock %}
+
+{% block extra_css %}
+<style>
+* { box-sizing: border-box; }
+.page { max-width: 900px; }
+
+/* ── КАРТОЧКИ БАЛАНСА ── */
+.balance-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 24px;
+}
+
+.balance-card {
+  background: #fff;
+  border: 1.5px solid #edf2f7;
+  border-radius: 16px;
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.balance-card__icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+
+.balance-card__label { font-size: 12px; color: #636e72; font-weight: 500; }
+
+.balance-card__amount {
+  font-size: 26px;
+  font-weight: 800;
+  color: #1a1a2e;
+  line-height: 1;
+}
+
+.balance-card__amount.green { color: #16a34a; }
+.balance-card__amount.orange { color: #d97706; }
+
+/* ── СЕКЦИИ ── */
+.section {
+  background: #fff;
+  border: 1.5px solid #edf2f7;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.section-title { font-size: 15px; font-weight: 700; color: #1a1a2e; margin: 0; }
+
+/* ── ВЫВОД СРЕДСТВ ── */
+.payout-form {
+  padding: 20px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.form-group { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 160px; }
+.form-label { font-size: 12px; font-weight: 600; color: #636e72; }
+
+.form-input, .form-select {
+  padding: 10px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  color: #1e293b;
+  outline: none;
+  transition: border-color .2s;
+}
+
+.form-input:focus, .form-select:focus { border-color: #22c55e; }
+
+.btn-payout {
+  background: #22c55e;
+  color: #fff;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .2s;
+}
+
+.btn-payout:hover { background: #16a34a; }
+
+/* ── ТАБЛИЦА ЛЕДЖЕРА ── */
+.ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.ledger-table th {
+  padding: 10px 16px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: #94a3b8;
+  text-align: left;
+  background: #f7f8fc;
+}
+
+.ledger-table td {
+  padding: 12px 16px;
+  font-size: 13px;
+  border-bottom: 1px solid #f1f5f9;
+  color: #1e293b;
+}
+
+.ledger-table tr:last-child td { border-bottom: none; }
+
+.entry-debit  { color: #ef4444; font-weight: 700; }
+.entry-credit { color: #22c55e; font-weight: 700; }
+
+/* ── ЗАЯВКИ НА ВЫВОД ── */
+.payout-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid #f1f5f9;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.payout-row:last-child { border-bottom: none; }
+
+.status-pill {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.s-pending   { background: #fef3c7; color: #92400e; }
+.s-completed { background: #d1fae5; color: #065f46; }
+.s-rejected  { background: #fee2e2; color: #991b1b; }
+
+/* ── АЛЕРТЫ ── */
+.alert {
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.alert-success { background: #dcfce7; color: #166534; }
+.alert-error   { background: #fee2e2; color: #991b1b; }
+
+.empty { text-align: center; padding: 24px; color: #94a3b8; font-size: 14px; }
+
+@media (max-width: 640px) {
+  .balance-grid { grid-template-columns: 1fr 1fr; }
+  .balance-card__amount { font-size: 20px; }
+  .payout-form { flex-direction: column; }
+  .ledger-table th:nth-child(3),
+  .ledger-table td:nth-child(3) { display: none; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page">
+
+  {% for msg in messages %}
+  <div class="alert alert-{% if msg.tags == 'error' %}error{% else %}success{% endif %}">
+    {{ msg }}
+  </div>
+  {% endfor %}
+
+  <!-- БАЛАНС -->
+  <div class="balance-grid">
+    <div class="balance-card">
+      <div class="balance-card__icon" style="background:#dcfce7;">💰</div>
+      <div class="balance-card__label">Доступный баланс</div>
+      <div class="balance-card__amount green">{{ wallet.balance }} KGS</div>
+    </div>
+    <div class="balance-card">
+      <div class="balance-card__icon" style="background:#fef3c7;">🔒</div>
+      <div class="balance-card__label">Заморожено</div>
+      <div class="balance-card__amount orange">{{ frozen_total }} KGS</div>
+    </div>
+    <div class="balance-card">
+      <div class="balance-card__icon" style="background:#dbeafe;">📊</div>
+      <div class="balance-card__label">Валюта</div>
+      <div class="balance-card__amount" style="font-size:18px;">{{ wallet.currency }}</div>
+    </div>
+  </div>
+
+  <!-- ВЫВОД СРЕДСТВ -->
+  <div class="section">
+    <div class="section-head">
+      <h3 class="section-title">💸 Вывести средства</h3>
+      <a href="{% url 'bank:requisites_list' %}" style="font-size:13px;color:#22c55e;font-weight:600;text-decoration:none;">
+        Мои реквизиты →
+      </a>
+    </div>
+
+    {% if pending_payouts %}
+    <div style="padding: 14px 20px; background:#fef9e7; border-bottom:1px solid #edf2f7;">
+      <span style="font-size:13px;color:#92400e;font-weight:600;">
+        ⏳ У вас есть активная заявка на вывод. Дождитесь её обработки.
+      </span>
+    </div>
+    {% else %}
+    <form method="POST" action="{% url 'bank:payout_create' %}">
+      {% csrf_token %}
+      <div class="payout-form">
+        <div class="form-group">
+          <label class="form-label">Сумма (KGS)</label>
+          <input type="number" name="amount" class="form-input"
+                 placeholder="1000.00" step="0.01" min="1"
+                 max="{{ wallet.balance }}" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Реквизиты</label>
+          <select name="requisites_id" class="form-select" required>
+            <option value="">Выберите реквизиты</option>
+            {% for r in requisites_list %}
+              {% if r.is_verified %}
+              <option value="{{ r.id }}" {% if r.is_default %}selected{% endif %}>
+                {{ r.bank_name }} | {{ r.account_number }}
+              </option>
+              {% endif %}
+            {% empty %}
+              <option disabled>Нет верифицированных реквизитов</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="btn-payout">Вывести</button>
+      </div>
+    </form>
+    {% endif %}
+  </div>
+
+  <!-- АКТИВНЫЕ ЗАЯВКИ -->
+  {% if pending_payouts %}
+  <div class="section">
+    <div class="section-head">
+      <h3 class="section-title">⏳ Активные заявки</h3>
+    </div>
+    {% for p in pending_payouts %}
+    <div class="payout-row">
+      <div>
+        <div style="font-size:14px;font-weight:700;">{{ p.amount }} KGS</div>
+        <div style="font-size:12px;color:#636e72;">{{ p.requisites.bank_name }} | {{ p.requisites.account_number }}</div>
+      </div>
+      <div style="text-align:right;">
+        <span class="status-pill s-pending">{{ p.get_status_display }}</span>
+        <div style="font-size:11px;color:#94a3b8;margin-top:3px;">{{ p.created_at|date:"d.m.Y H:i" }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- ИСТОРИЯ ЛЕДЖЕРА -->
+  <div class="section">
+    <div class="section-head">
+      <h3 class="section-title">📋 История операций</h3>
+    </div>
+    {% if ledger %}
+    <table class="ledger-table">
+      <thead>
+        <tr>
+          <th>Тип</th>
+          <th>Сумма</th>
+          <th>Операция</th>
+          <th>До</th>
+          <th>После</th>
+          <th>Дата</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for entry in ledger %}
+        <tr>
+          <td>
+            {% if entry.entry_type == 'credit' %}
+              <span class="entry-credit">▲ Приход</span>
+            {% else %}
+              <span class="entry-debit">▼ Расход</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if entry.entry_type == 'credit' %}
+              <span class="entry-credit">+{{ entry.amount }}</span>
+            {% else %}
+              <span class="entry-debit">-{{ entry.amount }}</span>
+            {% endif %}
+          </td>
+          <td style="color:#636e72;">{{ entry.transaction.get_transaction_type_display }}</td>
+          <td style="color:#94a3b8;">{{ entry.balance_before }}</td>
+          <td style="font-weight:600;">{{ entry.balance_after }}</td>
+          <td style="color:#94a3b8;font-size:12px;">{{ entry.created_at|date:"d.m H:i" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <div class="empty">Операций пока нет</div>
+    {% endif %}
+  </div>
+
+  <!-- ИСТОРИЯ ВЫПЛАТ -->
+  {% if payout_history %}
+  <div class="section">
+    <div class="section-head">
+      <h3 class="section-title">💳 История выплат</h3>
+    </div>
+    {% for p in payout_history %}
+    <div class="payout-row">
+      <div>
+        <div style="font-size:14px;font-weight:700;">{{ p.amount }} KGS</div>
+        <div style="font-size:12px;color:#636e72;">
+          {{ p.requisites.bank_name }} | {{ p.requisites.account_number }}
+        </div>
+        {% if p.admin_comment %}
+        <div style="font-size:12px;color:#636e72;margin-top:2px;">{{ p.admin_comment }}</div>
+        {% endif %}
+      </div>
+      <div style="text-align:right;">
+        <span class="status-pill s-{{ p.status }}">{{ p.get_status_display }}</span>
+        <div style="font-size:11px;color:#94a3b8;margin-top:3px;">{{ p.created_at|date:"d.m.Y" }}</div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

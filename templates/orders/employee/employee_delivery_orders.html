@@ -1,0 +1,421 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+  :root {
+    --green: #22c55e;
+    --green-dark: #16a34a;
+    --orange: #f59e0b;
+    --blue: #3b82f6;
+    --blue-dark: #2563eb;
+    --card: #ffffff;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --muted: #64748b;
+    --tag-bg: #f1f5f9;
+  }
+
+  * { box-sizing: border-box; }
+
+  .emp-wrap {
+    max-width: 900px;
+    margin: 24px auto;
+    padding: 0 16px;
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    color: var(--text);
+  }
+
+  /* ── ТАБ-НАВИГАЦИЯ ── */
+  .tab-nav {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 6px;
+  }
+
+  .tab-link {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 8px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    text-decoration: none;
+    transition: all .2s;
+    text-align: center;
+  }
+
+  .tab-link:hover { background: var(--tag-bg); color: var(--text); }
+  .tab-link.active-green { background: #dcfce7; color: var(--green-dark); }
+  .tab-link.active-orange { background: #fef3c7; color: #92400e; }
+  .tab-link.active-blue { background: #dbeafe; color: #1d4ed8; }
+
+  .tab-emoji { font-size: 16px; }
+
+  @media (max-width: 480px) {
+    .tab-link span.tab-label { display: none; }
+    .tab-emoji { font-size: 20px; }
+    .tab-link { padding: 10px 4px; }
+  }
+
+  .emp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .emp-title { font-size: 20px; font-weight: 700; margin: 0; }
+
+  .emp-badge {
+    background: var(--blue);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+
+  .order-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,.04);
+  }
+
+  /* Десктоп шапка */
+  .card-header {
+    display: grid;
+    grid-template-columns: 2fr 1.4fr 1.4fr 2fr 36px;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .card-header:hover { background: #f8fafc; }
+
+  /* Мобайл шапка */
+  .card-header-mobile {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 16px;
+    cursor: pointer;
+    user-select: none;
+    gap: 10px;
+  }
+
+  .card-header-mobile:hover { background: #f8fafc; }
+
+  .mobile-main-info { flex: 1; min-width: 0; }
+  .mobile-name { font-size: 15px; font-weight: 700; margin: 0 0 3px; }
+  .mobile-sub { font-size: 13px; color: var(--muted); }
+  .mobile-sub .blue { color: var(--blue-dark); font-weight: 600; }
+
+  .waiting-pill {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border-radius: 20px;
+    padding: 3px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .info-label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 2px;
+    font-weight: 600;
+  }
+
+  .info-val { font-size: 14px; font-weight: 500; }
+  .info-val.blue { color: var(--blue-dark); font-weight: 600; }
+
+  .chevron { color: var(--muted); font-size: 18px; transition: transform .25s; flex-shrink: 0; }
+  .order-card.open .chevron { transform: rotate(180deg); color: var(--blue); }
+
+  .card-body { max-height: 0; overflow: hidden; transition: max-height .3s ease; }
+  .order-card.open .card-body { max-height: 3000px; }
+
+  .card-body-inner { padding: 0 16px 16px; border-top: 1px solid var(--border); }
+
+  .client-section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 14px;
+  }
+
+  .client-chip {
+    background: var(--tag-bg);
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+
+  @media (max-width: 480px) {
+    .client-chip { flex: 1 1 calc(50% - 5px); }
+  }
+
+  .items-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 10px;
+  }
+
+  .item-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--green);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    background: #f0fdf4;
+  }
+
+  .item-img {
+    width: 46px; height: 46px;
+    object-fit: contain;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: #fff;
+    flex-shrink: 0;
+  }
+
+  .item-no-img {
+    width: 46px; height: 46px;
+    border-radius: 8px;
+    background: var(--tag-bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .item-info { flex: 1; min-width: 0; }
+  .item-name { font-size: 14px; font-weight: 600; margin: 0 0 3px; }
+
+  .item-meta {
+    font-size: 12px;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 2px;
+  }
+
+  .shop-tag {
+    background: #e0f2fe;
+    color: #0369a1;
+    border-radius: 5px;
+    padding: 1px 7px;
+    font-weight: 600;
+    font-size: 11px;
+  }
+
+  .collected-badge {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: var(--green);
+    color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .waiting-banner {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 10px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--blue-dark);
+    font-weight: 600;
+    margin-top: 14px;
+    text-align: center;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    color: var(--muted);
+  }
+
+  .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state p { margin: 0; font-size: 16px; }
+
+  @media (max-width: 640px) {
+    .emp-wrap { margin: 12px auto; padding: 0 12px; }
+    .emp-title { font-size: 18px; }
+    .card-header { display: none; }
+    .card-header-mobile { display: flex; }
+  }
+</style>
+
+<div class="emp-wrap">
+
+  <!-- ТАБ-НАВИГАЦИЯ -->
+  <nav class="tab-nav">
+    <a href="{% url 'orders:employee_new_orders' %}" class="tab-link">
+      <span class="tab-emoji">📋</span>
+      <span class="tab-label">Новые</span>
+    </a>
+    <a href="{% url 'orders:employee_processing_orders' %}" class="tab-link">
+      <span class="tab-emoji">📦</span>
+      <span class="tab-label">Сборка</span>
+    </a>
+    <a href="{% url 'orders:employee_delivery_orders' %}" class="tab-link active-blue">
+      <span class="tab-emoji">🚚</span>
+      <span class="tab-label">Доставка</span>
+    </a>
+  </nav>
+
+  <div class="emp-header">
+    <h2 class="emp-title">🚚 Ожидают курьера</h2>
+    <span class="emp-badge">{{ orders|length }} шт</span>
+  </div>
+
+  <div id="orders-list">
+    {% for order in orders %}
+    <div class="order-card" id="card-{{ order.id }}">
+
+      <!-- Десктоп шапка -->
+      <div class="card-header" onclick="toggleCard({{ order.id }})">
+        <div>
+          <div class="info-label">Имя</div>
+          <div class="info-val">{{ order.full_name|default:order.client.get_full_name|default:order.client.username }}</div>
+        </div>
+        <div>
+          <div class="info-label">Аккаунт</div>
+          <div class="info-val blue">@{{ order.client.username }}</div>
+        </div>
+        <div>
+          <div class="info-label">Телефон</div>
+          <div class="info-val">{{ order.phone|default:order.client.phone_number|default:"—" }}</div>
+        </div>
+        <div>
+          <div class="info-label">Адрес</div>
+          <div class="info-val">{{ order.address|default:"—"|truncatechars:30 }}</div>
+        </div>
+        <div class="chevron">▾</div>
+      </div>
+
+      <!-- Мобайл шапка -->
+      <div class="card-header-mobile" onclick="toggleCard({{ order.id }})">
+        <div class="mobile-main-info">
+          <p class="mobile-name">{{ order.full_name|default:order.client.get_full_name|default:order.client.username }}</p>
+          <p class="mobile-sub">
+            <span class="blue">@{{ order.client.username }}</span>
+            · {{ order.phone|default:order.client.phone_number|default:"—" }}
+          </p>
+        </div>
+        <div class="waiting-pill">🕐 Ждём</div>
+        <div class="chevron">▾</div>
+      </div>
+
+      <!-- Тело -->
+      <div class="card-body">
+        <div class="card-body-inner">
+
+          <div class="client-section">
+            <div class="client-chip">
+              <div class="info-label">Имя</div>
+              <div class="info-val">{{ order.full_name|default:order.client.get_full_name|default:"—" }}</div>
+            </div>
+            <div class="client-chip">
+              <div class="info-label">Телефон</div>
+              <div class="info-val">{{ order.phone|default:order.client.phone_number|default:"—" }}</div>
+            </div>
+            <div class="client-chip">
+              <div class="info-label">Аккаунт</div>
+              <div class="info-val blue">@{{ order.client.username }}</div>
+            </div>
+            <div class="client-chip">
+              <div class="info-label">Адрес</div>
+              <div class="info-val">{{ order.address|default:"—" }}</div>
+            </div>
+            <div class="client-chip">
+              <div class="info-label">Оплата</div>
+              <div class="info-val">{{ order.get_payment_method_display }}</div>
+            </div>
+            {% if order.comment %}
+            <div class="client-chip">
+              <div class="info-label">Комментарий</div>
+              <div class="info-val">{{ order.comment }}</div>
+            </div>
+            {% endif %}
+          </div>
+
+          <div class="items-title">Собранные товары · {{ order.items.count }} шт</div>
+
+          {% for item in order.items.all %}
+          <div class="item-row">
+            {% if item.product and item.product.image %}
+              <img src="{{ item.product.image.url }}" class="item-img" alt="">
+            {% else %}
+              <div class="item-no-img">📦</div>
+            {% endif %}
+            <div class="item-info">
+              <p class="item-name">{{ item.product_name }}</p>
+              <div class="item-meta">
+                <span><strong>{{ item.quantity }} шт</strong></span>
+                {% if item.product.shop %}
+                  <span class="shop-tag">🏪 {{ item.product.shop.name }}</span>
+                {% endif %}
+                {% if item.product.seller %}
+                  <span>{{ item.product.seller.get_full_name|default:item.product.seller.username }}</span>
+                {% endif %}
+              </div>
+            </div>
+            <div class="collected-badge">✓</div>
+          </div>
+          {% endfor %}
+
+          <div class="waiting-banner">
+            🕐 Ожидаем курьера. Заказ готов к отправке.
+          </div>
+
+        </div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="empty-state">
+      <div class="icon">📭</div>
+      <p>Нет заказов ожидающих курьера</p>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+
+<script>
+function toggleCard(id) {
+  const card = document.getElementById(`card-${id}`);
+  const isOpen = card.classList.contains('open');
+  document.querySelectorAll('.order-card.open').forEach(c => c.classList.remove('open'));
+  if (!isOpen) card.classList.add('open');
+}
+</script>
+{% endblock %}

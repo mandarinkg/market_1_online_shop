@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ category.name }} — FINE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/includes/products_app/products_card.css' %}">
+<style>
+.cat-page {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 12px 8px 80px;
+}
+
+.cat-breadcrumb {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 5px;
+    font-size: 12px;
+    color: #636e72;
+    margin-bottom: 10px;
+    padding: 0 4px;
+}
+.cat-breadcrumb a { color: #2ecc71; text-decoration: none; font-weight: 500; }
+.cat-breadcrumb__sep { color: #b2bec3; }
+.cat-breadcrumb__cur { color: #1a1a2e; font-weight: 600; }
+
+.cat-header {
+    padding: 0 4px;
+    margin-bottom: 12px;
+}
+.cat-header__title { font-size: 20px; font-weight: 800; color: #1a1a2e; margin: 0 0 2px; }
+.cat-header__count { font-size: 12px; color: #636e72; }
+
+.cat-chips {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 0 4px 10px;
+    scrollbar-width: none;
+    margin-bottom: 14px;
+}
+.cat-chips::-webkit-scrollbar { display: none; }
+
+.cat-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 14px;
+    background: #fff;
+    border: 1.5px solid #edf2f7;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #2d3436;
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: all 0.2s;
+}
+.cat-chip:hover { border-color: #2ecc71; color: #27ae60; }
+.cat-chip.active { background: #2ecc71; border-color: #2ecc71; color: #fff; font-weight: 600; }
+
+.cat-layout { display: flex; gap: 20px; align-items: flex-start; }
+.cat-content { flex: 1; min-width: 0; }
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+@media (min-width: 769px) {
+    .cat-page { padding: 20px 20px 60px; }
+    .product-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; }
+}
+@media (min-width: 1024px) {
+    .product-grid { grid-template-columns: repeat(4, 1fr); }
+}
+@media (max-width: 768px) {
+    .cat-sidebar-wrap { display: none; }
+    .cat-layout { flex-direction: column; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="cat-page">
+
+    <nav class="cat-breadcrumb">
+        <a href="/">Башкы бет</a>
+        <span class="cat-breadcrumb__sep">›</span>
+        <a href="{% url 'categories:list' %}">Категориялар</a>
+        {% if category.parent %}
+        <span class="cat-breadcrumb__sep">›</span>
+        <a href="{% url 'categories:detail' category.parent.slug %}">{{ category.parent.translated_name }}</a>
+        {% endif %}
+        <span class="cat-breadcrumb__sep">›</span>
+        <span class="cat-breadcrumb__cur">{{ category.translated_name }}</span>
+    </nav>
+
+    <div class="cat-header">
+        <h1 class="cat-header__title">{{ category.translated_name }}</h1>
+        <div class="cat-header__count">{{ products|length }} товар</div>
+    </div>
+
+    {% if subcategories %}
+    <div class="cat-chips">
+        {% if category.parent %}
+        <a href="{% url 'categories:detail' category.parent.slug %}" class="cat-chip">Баардыгы</a>
+        {% else %}
+        <a href="{% url 'categories:detail' category.slug %}" class="cat-chip active">Баардыгы</a>
+        {% endif %}
+        {% for sub in subcategories %}
+        <a href="{% url 'categories:detail' sub.slug %}"
+           class="cat-chip {% if category.slug == sub.slug %}active{% endif %}">
+            {{ sub.translated_name }}
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <div class="cat-layout">
+        <div class="cat-sidebar-wrap">
+            {% include 'includes/categories_app/category_sidebar.html' with categories=menu_categories active_slug=category.slug %}
+        </div>
+        <div class="cat-content">
+            <div class="product-grid">
+                {% for product in products %}
+                    {% include 'includes/products_app/products_card.html' with product=product %}
+                {% empty %}
+                    {% include 'includes/categories_app/category_empty.html' with empty_message="Бул бөлүмдө азырынча товарлар жок" %}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

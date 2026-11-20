@@ -1,0 +1,445 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Профиль — FINE{% endblock %}
+
+{% block extra_css %}
+<style>
+:root {
+    --green: #2ecc71;
+    --green-dark: #27ae60;
+    --green-light: #eafaf1;
+    --dark: #1a1a2e;
+    --gray: #636e72;
+    --border: #edf2f7;
+    --white: #fff;
+    --bg: #f7f8fc;
+}
+
+.profile-page {
+    max-width: 560px;
+    margin: 0 auto;
+    padding: 16px 8px 80px;
+}
+
+/* HEADER */
+.profile-header {
+    background: linear-gradient(135deg, #1a1a2e 0%, #0f2419 100%);
+    border-radius: 20px;
+    padding: 28px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 12px;
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-header::before {
+    content: '';
+    position: absolute;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(46,204,113,0.2) 0%, transparent 70%);
+    top: -60px; right: -40px;
+}
+
+.profile-avatar {
+    width: 64px; height: 64px;
+    background: var(--green);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; font-weight: 800; color: #fff;
+    flex-shrink: 0;
+    border: 3px solid rgba(255,255,255,0.15);
+    position: relative; z-index: 1;
+}
+
+.profile-header__info { flex: 1; position: relative; z-index: 1; }
+.profile-header__name { font-size: 18px; font-weight: 700; color: #fff; margin: 0 0 3px; }
+.profile-header__email { font-size: 13px; color: rgba(255,255,255,0.55); margin: 0 0 8px; }
+.profile-header__role {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(46,204,113,0.2);
+    border: 1px solid rgba(46,204,113,0.3);
+    color: var(--green);
+    font-size: 11px; font-weight: 600;
+    padding: 3px 10px; border-radius: 999px;
+}
+
+.profile-header__edit {
+    position: relative; z-index: 1;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.profile-header__edit:hover { background: rgba(255,255,255,0.2); }
+
+/* SUCCESS */
+.profile-success {
+    background: var(--green-light);
+    border: 1px solid rgba(46,204,113,0.3);
+    color: var(--green-dark);
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* INFO ROWS (view mode) */
+.profile-info-card {
+    background: var(--white);
+    border-radius: 16px;
+    border: 1.5px solid var(--border);
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.profile-info-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.profile-info-row:last-child { border-bottom: none; }
+
+.profile-info-row__icon {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: var(--bg);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.profile-info-row__content { flex: 1; min-width: 0; }
+.profile-info-row__label { font-size: 11px; color: var(--gray); margin-bottom: 2px; }
+.profile-info-row__value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--dark);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.profile-info-row__empty {
+    font-size: 13px;
+    color: #b2bec3;
+    font-style: italic;
+}
+
+/* EDIT FORM (hidden by default) */
+.profile-edit-form {
+    display: none;
+    background: var(--white);
+    border-radius: 16px;
+    border: 1.5px solid var(--green);
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+
+.profile-edit-form.show { display: block; }
+
+.profile-edit-section {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+}
+
+.profile-edit-section:last-of-type { border-bottom: none; }
+
+.profile-edit-section__title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: var(--gray);
+    margin: 0 0 12px;
+}
+
+.form-group { margin-bottom: 12px; }
+.form-group:last-child { margin-bottom: 0; }
+
+.form-group label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--dark);
+    margin-bottom: 5px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    color: var(--dark);
+    background: var(--bg);
+    box-sizing: border-box;
+    outline: none;
+    transition: all 0.2s;
+}
+
+.form-control:focus {
+    border-color: var(--green);
+    background: var(--white);
+    box-shadow: 0 0 0 3px rgba(46,204,113,0.1);
+}
+
+textarea.form-control { resize: none; }
+
+.edit-actions {
+    display: flex;
+    gap: 10px;
+    padding: 14px 16px;
+    background: var(--bg);
+}
+
+.btn-save {
+    flex: 1;
+    background: var(--green);
+    color: #fff;
+    border: none;
+    padding: 13px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: background 0.2s;
+}
+
+.btn-save:hover { background: var(--green-dark); }
+
+.btn-cancel {
+    background: var(--white);
+    color: var(--gray);
+    border: 1.5px solid var(--border);
+    padding: 13px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+}
+
+.btn-cancel:hover { border-color: var(--gray); color: var(--dark); }
+
+/* LOGOUT */
+.btn-logout {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    background: #fff5f5;
+    border: 1.5px solid #fed7d7;
+    color: #e74c3c;
+    padding: 14px;
+    border-radius: 14px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+    margin-top: 4px;
+}
+
+.btn-logout:hover { background: #ffe0e0; color: #c53030; }
+
+@media (min-width: 769px) {
+    .profile-page { padding: 24px 20px 60px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+
+    <!-- HEADER -->
+    <div class="profile-header">
+        <div class="profile-avatar">{{ user.username|first|upper }}</div>
+        <div class="profile-header__info">
+            <div class="profile-header__name">
+                {{ form.instance.full_name|default:user.get_full_name|default:user.username }}
+            </div>
+            <div class="profile-header__email">{{ user.email }}</div>
+            <div class="profile-header__role">
+                {% if user.is_superuser %}⚙️ Админ
+                {% elif user.role == 'seller' %}🏪 Продавец
+                {% elif user.role == 'employee' %}👔 Сотрудник
+                {% elif user.role == 'courier' %}🚴 Курьер
+                {% else %}🛍️ Клиент{% endif %}
+            </div>
+        </div>
+        <button class="profile-header__edit" onclick="toggleEdit()" id="editBtn">
+            <i class="fas fa-edit"></i> Түзөтүү
+        </button>
+    </div>
+
+    <!-- SUCCESS -->
+    {% if messages %}
+    {% for message in messages %}
+    <div class="profile-success">
+        <i class="fas fa-check-circle"></i> {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <!-- INFO VIEW MODE -->
+    <div class="profile-info-card" id="infoView">
+        <div class="profile-info-row">
+            <div class="profile-info-row__icon">👤</div>
+            <div class="profile-info-row__content">
+                <div class="profile-info-row__label">Аты-жөнү</div>
+                {% if form.instance.full_name %}
+                <div class="profile-info-row__value">{{ form.instance.full_name }}</div>
+                {% else %}
+                <div class="profile-info-row__empty">Толтурулган эмес</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="profile-info-row">
+            <div class="profile-info-row__icon">📱</div>
+            <div class="profile-info-row__content">
+                <div class="profile-info-row__label">Телефон</div>
+                {% if form.instance.phone %}
+                <div class="profile-info-row__value">{{ form.instance.phone }}</div>
+                {% else %}
+                <div class="profile-info-row__empty">Толтурулган эмес</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="profile-info-row">
+            <div class="profile-info-row__icon">📍</div>
+            <div class="profile-info-row__content">
+                <div class="profile-info-row__label">Дарек</div>
+                {% if form.instance.address %}
+                <div class="profile-info-row__value">{{ form.instance.address }}</div>
+                {% else %}
+                <div class="profile-info-row__empty">Толтурулган эмес</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="profile-info-row">
+            <div class="profile-info-row__icon">📦</div>
+            <div class="profile-info-row__content">
+                <div class="profile-info-row__label">Пункт выдачи</div>
+                {% if form.instance.preferred_pickup_point %}
+                <div class="profile-info-row__value">{{ form.instance.preferred_pickup_point }}</div>
+                {% else %}
+                <div class="profile-info-row__empty">Толтурулган эмес</div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="profile-info-row">
+            <div class="profile-info-row__icon">🌐</div>
+            <div class="profile-info-row__content">
+                <div class="profile-info-row__label">Тил</div>
+                <div class="profile-info-row__value">
+                    {% if form.instance.language == 'ky' %}Кыргызча{% else %}Русский{% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- EDIT FORM (hidden) -->
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="profile-edit-form" id="editForm">
+
+            <div class="profile-edit-section">
+                <div class="profile-edit-section__title">👤 Жеке маалымат</div>
+                <div class="form-group">
+                    <label>{{ form.full_name.label }}</label>
+                    {{ form.full_name }}
+                </div>
+                <div class="form-group">
+                    <label>{{ form.phone.label }}</label>
+                    {{ form.phone }}
+                </div>
+            </div>
+
+            <div class="profile-edit-section">
+                <div class="profile-edit-section__title">📍 Жеткируу</div>
+                <div class="form-group">
+                    <label>{{ form.address.label }}</label>
+                    {{ form.address }}
+                </div>
+                <div class="form-group">
+                    <label>{{ form.preferred_pickup_point.label }}</label>
+                    {{ form.preferred_pickup_point }}
+                </div>
+            </div>
+
+            <div class="profile-edit-section">
+                <div class="profile-edit-section__title">🌐 Тил</div>
+                <div class="form-group">
+                    {{ form.language }}
+                </div>
+            </div>
+
+            <div class="edit-actions">
+                <button type="submit" class="btn-save">
+                    <i class="fas fa-save"></i> Сактоо
+                </button>
+                <button type="button" class="btn-cancel" onclick="toggleEdit()">
+                    Жокко чыгаруу
+                </button>
+            </div>
+
+        </div>
+    </form>
+
+    <!-- LOGOUT -->
+    <a href="{% url 'accounts:logout' %}" class="btn-logout">
+        <i class="fas fa-sign-out-alt"></i> Чыгуу
+    </a>
+
+</div>
+
+<script>
+function toggleEdit() {
+    const editForm = document.getElementById('editForm');
+    const infoView = document.getElementById('infoView');
+    const editBtn = document.getElementById('editBtn');
+
+    const isEditing = editForm.classList.contains('show');
+
+    if (isEditing) {
+        editForm.classList.remove('show');
+        infoView.style.display = 'block';
+        editBtn.innerHTML = '<i class="fas fa-edit"></i> Түзөтүү';
+    } else {
+        editForm.classList.add('show');
+        infoView.style.display = 'none';
+        editBtn.innerHTML = '<i class="fas fa-times"></i> Жабуу';
+        editForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+// Эгер форма ката менен кайтса — автоматтык редактирование режимин ачабыз
+{% if form.errors %}
+toggleEdit();
+{% endif %}
+</script>
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}FINE — Акциялар жана жеңилдиктер{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/includes/products_app/products_card.css' %}">
+<link rel="stylesheet" href="{% static 'css/index.css' %}">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&display=swap" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO БАННЕР -->
+<div class="hero">
+    <div class="hero-text">
+        <div class="hero-badge">🔥 Бүгүнкү акциялар</div>
+        <h1>Мыкты баада<br><span>жеңилдиктер!</span></h1>
+        <p>Шаарга барбай эле заказ бер — биз жеткирип беребиз. Электроника, азык-түлүк жана дагы көп нерсе.</p>
+        <div class="hero-btns">
+            <a href="{% url 'products:list' %}" class="btn-primary">
+                <i class="fas fa-store"></i> Бардык товарлар
+            </a>
+            <a href="{% url 'categories:list' %}" class="btn-outline">
+                <i class="fas fa-th-large"></i> Категориялар
+            </a>
+        </div>
+    </div>
+    <div class="hero-stats">
+        <div class="hero-stat">
+            <span class="hero-stat-num">500+</span>
+            <span class="hero-stat-label">Товар</span>
+        </div>
+        <div class="hero-stat">
+            <span class="hero-stat-num">24ч</span>
+            <span class="hero-stat-label">Жеткируу</span>
+        </div>
+        <div class="hero-stat">
+            <span class="hero-stat-num">5★</span>
+            <span class="hero-stat-label">Рейтинг</span>
+        </div>
+    </div>
+</div>
+
+<!-- КАТЕГОРИЯЛАР — include аркылуу -->
+<div class="section-header">
+    <h2 class="section-title-new">Категориялар</h2>
+    <a href="{% url 'categories:list' %}" class="section-link">
+        Баары <i class="fas fa-arrow-right"></i>
+    </a>
+</div>
+{% include 'includes/categories_app/categories_slider.html' with menu_categories=menu_categories %}
+
+<!-- АКЦИЯ БАННЕРИ -->
+<div class="sale-banner" style="margin-top: 32px;">
+    <div class="sale-banner-text">
+        <h3>🔥 Чоң жеңилдиктер!</h3>
+        <p>Тандалган товарларга -10%ден -50%ке чейин. Убакыт чектелүү!</p>
+    </div>
+    <a href="{% url 'products:list' %}" class="btn-white">Акцияларды көрүү →</a>
+</div>
+
+<!-- АКЦИЯДАГЫ ТОВАРЛАР -->
+<div class="products-section">
+    <div class="section-header">
+        <h2 class="section-title-new">🏷️ Акциядагы товарлар</h2>
+        <a href="{% url 'products:list' %}" class="section-link">
+            Баары <i class="fas fa-arrow-right"></i>
+        </a>
+    </div>
+
+    <div class="discounted-grid">
+        {% for product in discounted_products %}
+            {% include 'includes/products_app/products_card.html' with product=product %}
+        {% empty %}
+            <div class="empty-state" style="grid-column:1/-1; text-align:center; padding:40px; color:#95a5a6;">
+                <div style="font-size:48px; margin-bottom:12px;">🏷️</div>
+                <p>Азырынча акциялар жок</p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- КАТАЛОГГО ӨТҮҮ -->
+<div class="cta-bottom">
+    <h3>Дагы товарларды издеп жатасызбы?</h3>
+    <p>Каталогдо 500+ товар бар — электроника, азык-түлүк жана дагы көп нерсе</p>
+    <a href="{% url 'products:list' %}" class="btn-primary" style="display:inline-flex;">
+        <i class="fas fa-store"></i> Бардык товарларды көрүү
+    </a>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/includes/products_app/favorites.js' %}"></script>
+<script src="{% static 'js/includes/products_app/cart.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,245 @@
+{% extends 'dashboard/base_dashboard.html' %}
+
+{% block title %}Панель Курьера — FINE{% endblock %}
+{% block header_title %}Панель Курьера{% endblock %}
+
+{% block extra_css %}
+<style>
+.db-page { max-width: 700px; }
+
+.db-welcome {
+    background: linear-gradient(135deg, #1a1a2e 0%, #1a0f2e 100%);
+    border-radius: 20px;
+    padding: 24px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+}
+
+.db-welcome::before {
+    content: '';
+    position: absolute;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(155,89,182,0.25) 0%, transparent 70%);
+    top: -60px; right: -40px;
+}
+
+.db-welcome__avatar {
+    width: 56px; height: 56px;
+    background: #9b59b6;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 800; color: #fff;
+    flex-shrink: 0;
+    border: 3px solid rgba(255,255,255,0.15);
+    position: relative; z-index: 1;
+}
+
+.db-welcome__text { position: relative; z-index: 1; flex: 1; }
+.db-welcome__name { font-size: 18px; font-weight: 700; color: #fff; margin: 0 0 5px; }
+.db-welcome__role {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: rgba(155,89,182,0.2); border: 1px solid rgba(155,89,182,0.3);
+    color: #c39bd3; font-size: 12px; font-weight: 600;
+    padding: 3px 10px; border-radius: 999px;
+}
+
+.db-welcome__settings {
+    position: relative; z-index: 2;
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 16px;
+    text-decoration: none;
+    transition: background 0.2s;
+    flex-shrink: 0;
+}
+.db-welcome__settings:hover { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* STATS */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.stat-card {
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px 12px;
+    border: 1.5px solid #edf2f7;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s;
+    text-decoration: none;
+    color: inherit;
+    text-align: center;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    border-color: #9b59b6;
+}
+
+.stat-card__icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+}
+
+.stat-card__num { font-size: 26px; font-weight: 800; color: #1a1a2e; line-height: 1; }
+.stat-card__label { font-size: 11px; color: #636e72; font-weight: 500; }
+
+/* QUICK ACTION */
+.quick-action {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fff;
+    border-radius: 16px;
+    border: 1.5px solid #edf2f7;
+    padding: 16px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s;
+    margin-bottom: 10px;
+}
+
+.quick-action:hover { border-color: #9b59b6; box-shadow: 0 4px 16px rgba(155,89,182,0.12); }
+
+.quick-action__left { display: flex; align-items: center; gap: 12px; }
+
+.quick-action__icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.quick-action__title { font-size: 14px; font-weight: 700; color: #1a1a2e; margin: 0 0 2px; }
+.quick-action__sub { font-size: 12px; color: #636e72; }
+
+.quick-action__arrow { color: #b2bec3; font-size: 14px; }
+
+/* BADGE */
+.count-badge {
+    background: #9b59b6;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-left: 6px;
+}
+
+/* SECTION TITLE */
+.section-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #636e72;
+    margin: 0 0 10px;
+}
+
+@media (max-width: 480px) {
+    .stats-grid { gap: 8px; }
+    .stat-card { padding: 14px 8px; }
+    .stat-card__num { font-size: 22px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="db-page">
+
+    <!-- WELCOME -->
+    <div class="db-welcome">
+        <div class="db-welcome__avatar">{{ user.username|first|upper }}</div>
+        <div class="db-welcome__text">
+            <div class="db-welcome__name">{{ user.get_full_name|default:user.username }}</div>
+            <div class="db-welcome__role"><i class="fas fa-motorcycle"></i> Курьер</div>
+        </div>
+        <a href="{% url 'accounts:profile' %}" class="db-welcome__settings">
+            <i class="fas fa-cog"></i>
+        </a>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-grid">
+        <a href="{% url 'orders:courier_orders' %}" class="stat-card">
+            <div class="stat-card__icon" style="background:#fef9e7;">🚚</div>
+            <div class="stat-card__num">{{ assigned_orders|default:0 }}</div>
+            <div class="stat-card__label">Дайындалган</div>
+        </a>
+        <a href="{% url 'orders:courier_orders' %}" class="stat-card">
+            <div class="stat-card__icon" style="background:#e8f4fd;">🛣️</div>
+            <div class="stat-card__num">{{ route_orders|default:0 }}</div>
+            <div class="stat-card__label">Маршрутта</div>
+        </a>
+        <a href="{% url 'orders:courier_orders' %}" class="stat-card">
+            <div class="stat-card__icon" style="background:#eafaf1;">✅</div>
+            <div class="stat-card__num">{{ completed_orders|default:0 }}</div>
+            <div class="stat-card__label">Жеткирилди</div>
+        </a>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="section-title">Тез өтүү</div>
+
+    <a href="{% url 'orders:courier_orders' %}" class="quick-action">
+        <div class="quick-action__left">
+            <div class="quick-action__icon" style="background:#fef9e7;">📋</div>
+            <div>
+                <div class="quick-action__title">
+                    Заказдарым
+                    {% if assigned_orders %}
+                    <span class="count-badge">{{ assigned_orders }}</span>
+                    {% endif %}
+                </div>
+                <div class="quick-action__sub">Жеткирүүгө дайындалган</div>
+            </div>
+        </div>
+        <i class="fas fa-chevron-right quick-action__arrow"></i>
+    </a>
+
+    <a href="{% url 'orders:courier_orders' %}" class="quick-action">
+        <div class="quick-action__left">
+            <div class="quick-action__icon" style="background:#e8f4fd;">🗺️</div>
+            <div>
+                <div class="quick-action__title">
+                    Маршрут
+                    {% if route_orders %}
+                    <span class="count-badge">{{ route_orders }}</span>
+                    {% endif %}
+                </div>
+                <div class="quick-action__sub">Азыр жолдо</div>
+            </div>
+        </div>
+        <i class="fas fa-chevron-right quick-action__arrow"></i>
+    </a>
+
+    <a href="{% url 'accounts:profile' %}" class="quick-action">
+        <div class="quick-action__left">
+            <div class="quick-action__icon" style="background:#f5eef8;">⚙️</div>
+            <div>
+                <div class="quick-action__title">Профиль</div>
+                <div class="quick-action__sub">Маалыматтарды өзгөртүү</div>
+            </div>
+        </div>
+        <i class="fas fa-chevron-right quick-action__arrow"></i>
+    </a>
+
+</div>
+{% endblock %}

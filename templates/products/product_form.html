@@ -1,0 +1,502 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ title }} — FINE{% endblock %}
+
+{% block extra_css %}
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --g1: #16a34a;
+  --g2: #15803d;
+  --g-bg: #f0fdf4;
+  --g-border: #bbf7d0;
+  --page: #f8fafc;
+  --white: #ffffff;
+  --border: #e2e8f0;
+  --border-focus: #16a34a;
+  --text: #0f172a;
+  --text-2: #475569;
+  --text-3: #94a3b8;
+  --error: #dc2626;
+  --error-bg: #fef2f2;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--page);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: var(--text);
+}
+
+/* ── LAYOUT ── */
+.fp-wrap {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 16px 80px;
+}
+
+/* ── PAGE HEADER ── */
+.fp-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.fp-header-icon {
+  width: 46px; height: 46px;
+  background: var(--g-bg);
+  border: 1.5px solid var(--g-border);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.fp-header-title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text);
+}
+
+.fp-header-sub {
+  font-size: 13px;
+  color: var(--text-3);
+  margin-top: 2px;
+}
+
+/* ── CARD ── */
+.fp-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+/* ── SECTION ── */
+.fp-section {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+}
+
+.fp-section:last-child { border-bottom: none; }
+
+.fp-section-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+}
+
+.fp-section-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--g1);
+  flex-shrink: 0;
+}
+
+.fp-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--text-3);
+}
+
+/* ── FIELD ── */
+.fp-field {
+  margin-bottom: 16px;
+}
+
+.fp-field:last-child { margin-bottom: 0; }
+
+.fp-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 6px;
+}
+
+.fp-label span {
+  color: var(--error);
+  margin-left: 2px;
+}
+
+/* Все инпуты */
+.fp-field input[type="text"],
+.fp-field input[type="number"],
+.fp-field input[type="email"],
+.fp-field select,
+.fp-field textarea,
+.fp-field .form-control {
+  width: 100%;
+  padding: 10px 13px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text);
+  background: #fafafa;
+  outline: none;
+  transition: border-color .15s, background .15s, box-shadow .15s;
+  appearance: none;
+}
+
+.fp-field input[type="text"]:focus,
+.fp-field input[type="number"]:focus,
+.fp-field select:focus,
+.fp-field textarea:focus,
+.fp-field .form-control:focus {
+  border-color: var(--border-focus);
+  background: var(--white);
+  box-shadow: 0 0 0 3px rgba(22,163,74,.1);
+}
+
+.fp-field select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 36px;
+  cursor: pointer;
+}
+
+.fp-field textarea { resize: vertical; min-height: 90px; }
+
+/* Файл инпут */
+.fp-file-wrap {
+  position: relative;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: #fafafa;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+
+.fp-file-wrap:hover { border-color: var(--g1); background: var(--g-bg); }
+
+.fp-file-wrap input[type="file"] {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  opacity: 0; cursor: pointer;
+}
+
+.fp-file-icon { font-size: 22px; margin-bottom: 6px; }
+.fp-file-text { font-size: 13px; font-weight: 600; color: var(--text-2); }
+.fp-file-sub  { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+
+/* Двухколоночная строка */
+.fp-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+/* Инфо-блок (подсказка) */
+.fp-hint {
+  display: flex;
+  gap: 10px;
+  background: var(--g-bg);
+  border: 1px solid var(--g-border);
+  border-radius: var(--radius-sm);
+  padding: 11px 13px;
+  margin-bottom: 12px;
+}
+
+.fp-hint-icon { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+
+.fp-hint-text {
+  font-size: 12px;
+  color: var(--g2);
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+/* Ошибки и хелп */
+.fp-error {
+  display: flex; align-items: center; gap: 5px;
+  color: var(--error); font-size: 12px;
+  font-weight: 500; margin-top: 5px;
+}
+
+.fp-help {
+  font-size: 12px; color: var(--text-3);
+  margin-top: 4px; line-height: 1.5;
+}
+
+/* ── ACTIONS ── */
+.fp-actions {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 18px 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-save {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--g1); color: #fff;
+  border: none; border-radius: var(--radius-sm);
+  padding: 11px 22px;
+  font-size: 14px; font-weight: 700;
+  font-family: inherit; cursor: pointer;
+  transition: background .15s, transform .12s, box-shadow .15s;
+}
+
+.btn-save:hover {
+  background: var(--g2);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(22,163,74,.25);
+}
+
+.btn-save:active { transform: translateY(0); }
+
+.btn-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  color: var(--text-2); text-decoration: none;
+  font-size: 13px; font-weight: 600;
+  padding: 11px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  transition: border-color .15s, color .15s;
+}
+
+.btn-back:hover { border-color: var(--text-2); color: var(--text); }
+
+/* ── АДАПТИВ ── */
+@media (max-width: 580px) {
+  .fp-section { padding: 16px; }
+  .fp-row { grid-template-columns: 1fr; }
+  .fp-actions { flex-direction: column; }
+  .btn-save, .btn-back { width: 100%; justify-content: center; }
+  .fp-header-title { font-size: 18px; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="fp-wrap">
+
+  <!-- ЗАГОЛОВОК -->
+  <div class="fp-header">
+    <div class="fp-header-icon">📦</div>
+    <div>
+      <div class="fp-header-title">{{ title }}</div>
+      <div class="fp-header-sub">Заполните все обязательные поля</div>
+    </div>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    <!-- 1. МАГАЗИН -->
+    <div class="fp-card">
+      <div class="fp-section">
+        <div class="fp-section-head">
+          <div class="fp-section-dot"></div>
+          <div class="fp-section-label">Магазин</div>
+        </div>
+        <div class="fp-field">
+          <label class="fp-label">{{ form.shop.label }} <span>*</span></label>
+          {{ form.shop }}
+          {% if form.shop.errors %}<div class="fp-error"><i class="fas fa-exclamation-circle"></i> {{ form.shop.errors|striptags }}</div>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. ОСНОВНАЯ ИНФОРМАЦИЯ -->
+    <div class="fp-card">
+      <div class="fp-section">
+        <div class="fp-section-head">
+          <div class="fp-section-dot"></div>
+          <div class="fp-section-label">Основное</div>
+        </div>
+
+        <div class="fp-field">
+          <label class="fp-label">{{ form.category.label }}</label>
+          {{ form.category }}
+          {% if form.category.errors %}<div class="fp-error"><i class="fas fa-exclamation-circle"></i> {{ form.category.errors|striptags }}</div>{% endif %}
+        </div>
+
+        <div class="fp-field">
+          <label class="fp-label">{{ form.title.label }} <span>*</span></label>
+          {{ form.title }}
+          {% if form.title.errors %}<div class="fp-error"><i class="fas fa-exclamation-circle"></i> {{ form.title.errors|striptags }}</div>{% endif %}
+        </div>
+
+        <div class="fp-field">
+          <label class="fp-label">{{ form.description.label }}</label>
+          {{ form.description }}
+          {% if form.description.errors %}<div class="fp-error"><i class="fas fa-exclamation-circle"></i> {{ form.description.errors|striptags }}</div>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. ФОТО -->
+    <div class="fp-card">
+      <div class="fp-section">
+        <div class="fp-section-head">
+          <div class="fp-section-dot"></div>
+          <div class="fp-section-label">Фотографии</div>
+        </div>
+
+        <div class="fp-field">
+          <label class="fp-label">{{ form.image.label }}</label>
+          <div class="fp-file-wrap">
+            {{ form.image }}
+            <div class="fp-file-icon">🖼️</div>
+            <div class="fp-file-text">Главное фото товара</div>
+            <div class="fp-file-sub">PNG, JPG, WEBP</div>
+          </div>
+          {% if form.image.errors %}<div class="fp-error"><i class="fas fa-exclamation-circle"></i> {{ form.image.errors|striptags }}</div>{% endif %}
+        </div>
+
+        <div class="fp-field">
+          <label class="fp-label">{{ form.gallery_images.label }}</label>
+          <div class="fp-file-wrap">
+            <input type="file" name="gallery_images" accept="image/*" multiple>
+            <div class="fp-file-icon">📷</div>
+            <div class="fp-file-text">Дополнительные фото</div>
+            <div class="fp-file-sub">Можно выбрать несколько</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. ХАРАКТЕРИСТИКИ -->
+    <div class="fp-card">
+      <div class="fp-section">
+        <div class="fp-section-head">
+          <div class="fp-section-dot"></div>
+          <div class="fp-section-label">Характеристики</div>
+        </div>
+
+        <div class="fp-hint">
+          <div class="fp-hint-icon">💡</div>
+          <div class="fp-hint-text">
+            Каждая характеристика — с новой строки.<br>
+            Формат: <strong>Название: Значение</strong><br>
+            Бренд: Samsung &nbsp;·&nbsp; RAM: 8GB &nbsp;·&nbsp; Память: 256GB
+          </div>
+        </div>
+
+        <div class="fp-field">
+          <label class="fp-label">{{ form.attributes.label }}</label>
+          {{ form.attributes }}
+          {% if form.attributes.errors %}<div class="fp-error"><i class="fas fa-exclamation-circle"></i> {{ form.attributes.errors|striptags }}</div>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. ЦЕНА И ЗАПАС -->
+    <div class="fp-card">
+      <div class="fp-section">
+        <div class="fp-section-head">
+          <div class="fp-section-dot"></div>
+          <div class="fp-section-label">Цена и запас</div>
+        </div>
+
+        <div class="fp-row">
+          <div class="fp-field">
+            <label class="fp-label">{{ form.purchase_price.label }} <span>*</span></label>
+            {{ form.purchase_price }}
+            {% if form.purchase_price.errors %}<div class="fp-error"><i class="fas fa-exclamation-circle"></i> {{ form.purchase_price.errors|striptags }}</div>{% endif %}
+          </div>
+          <div class="fp-field">
+            <label class="fp-label">{{ form.price.label }} <span>*</span></label>
+            {{ form.price }}
+            {% if form.price.errors %}<div class="fp-error"><i class="fas fa-exclamation-circle"></i> {{ form.price.errors|striptags }}</div>{% endif %}
+          </div>
+        </div>
+
+        {% if form.discount_percent %}
+        <div class="fp-row">
+          <div class="fp-field">
+            <label class="fp-label">{{ form.discount_percent.label }}</label>
+            {{ form.discount_percent }}
+            {% if form.discount_percent.errors %}<div class="fp-error"><i class="fas fa-exclamation-circle"></i> {{ form.discount_percent.errors|striptags }}</div>{% endif %}
+          </div>
+          {% if form.old_price %}
+          <div class="fp-field">
+            <label class="fp-label">{{ form.old_price.label }}</label>
+            {{ form.old_price }}
+            <div class="fp-help">Рассчитывается автоматически</div>
+          </div>
+          {% endif %}
+        </div>
+        {% endif %}
+
+        <div class="fp-field">
+          <label class="fp-label">{{ form.stock.label }} <span>*</span></label>
+          {{ form.stock }}
+          {% if form.stock.errors %}<div class="fp-error"><i class="fas fa-exclamation-circle"></i> {{ form.stock.errors|striptags }}</div>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- КНОПКИ -->
+    <div class="fp-actions">
+      <button type="submit" class="btn-save">
+        <i class="fas fa-save"></i> Сохранить товар
+      </button>
+      <a href="javascript:history.back()" class="btn-back">
+        <i class="fas fa-arrow-left"></i> Назад
+      </a>
+    </div>
+
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const categoryField = document.getElementById('id_category');
+  const attributesField = document.getElementById('id_attributes');
+
+  if (!categoryField || !attributesField) return;
+
+  const templates = {
+    'телефон': 'Бренд: \nМодель: \nRAM: \nПамять: \nЭкран: ',
+    'ноутбук': 'Бренд: \nМодель: \nПроцессор: \nRAM: \nSSD: ',
+    'одежда':  'Размер: \nЦвет: \nМатериал: ',
+    'default': 'Характеристика: '
+  };
+
+  categoryField.addEventListener('change', function () {
+    if (attributesField.value.trim() !== '') return;
+    const text = this.options[this.selectedIndex].text.toLowerCase();
+    let template = templates.default;
+    for (const key in templates) {
+      if (text.includes(key)) { template = templates[key]; break; }
+    }
+    attributesField.value = template;
+  });
+
+  /* Показывать имя выбранного файла */
+  document.querySelectorAll('input[type="file"]').forEach(function (inp) {
+    inp.addEventListener('change', function () {
+      const wrap = this.closest('.fp-file-wrap');
+      if (!wrap) return;
+      const textEl = wrap.querySelector('.fp-file-text');
+      if (!textEl) return;
+      if (this.files && this.files.length > 0) {
+        textEl.textContent = this.files.length > 1
+          ? this.files.length + ' файлов выбрано'
+          : this.files[0].name;
+      }
+    });
+  });
+});
+</script>
+{% endblock %}

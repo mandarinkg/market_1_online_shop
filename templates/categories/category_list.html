@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load static i18n %}
+
+{% block title %}{% trans "Бардык категориялар" %} — FINE{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/includes/products_app/products_card.css' %}">
+{% endblock %}
+
+{% block content %}
+<div style="max-width:1200px; margin:24px auto; padding:0 0px 60px;">
+
+    <!-- ЗАГОЛОВОК -->
+    <h1 style="font-size:24px; font-weight:800; color:#1a1a2e; margin:0 0 20px;">
+        {% trans "Бардык категориялар" %}
+    </h1>
+
+    <!-- КАТЕГОРИЯЛАР GRID -->
+    {% include 'includes/categories_app/categories_grid.html' with categories=categories %}
+
+    <!-- СУНУШТАЛГАН ТОВАРЛАР -->
+    {% if recent_products %}
+    <div style="margin-top: 40px;">
+
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:16px;">
+            <h2 style="font-size:20px; font-weight:800; color:#1a1a2e; margin:0;">
+                ✨ {% trans "Сунушталган товарлар" %}
+            </h2>
+            <a href="{% url 'products:list' %}"
+               style="font-size:13px; color:#2ecc71; font-weight:600; text-decoration:none; display:flex; align-items:center; gap:4px;">
+                {% trans "Баары" %} <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+
+        <div class="product-grid">
+            {% for product in recent_products %}
+                {% include 'includes/products_app/products_card.html' with product=product %}
+            {% endfor %}
+        </div>
+
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
